@@ -9,10 +9,17 @@ Design and decisions: [DESIGN.md](DESIGN.md).
 
 ## Install
 
-Clone the repo and load it as a plugin:
+In Claude Code:
+
+```
+/plugin marketplace add yushman/slimspec
+/plugin install slimspec@slimspec
+```
+
+Or load a local clone:
 
 ```bash
-git clone <repo-url> ~/src/slimspec
+git clone https://github.com/yushman/slimspec ~/src/slimspec
 claude --plugin-dir ~/src/slimspec
 ```
 

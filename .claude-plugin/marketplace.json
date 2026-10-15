@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "slimspec",
+  "owner": { "name": "yushman" },
+  "description": "Lightweight spec-driven development for Claude Code.",
+  "plugins": [
+    {
+      "name": "slimspec",
+      "source": "./",
+      "description": "Explore, plan, apply, verify, ground with red-green TDD and specs as module CLAUDE.md files.",
+      "category": "development",
+      "homepage": "https://github.com/yushman/slimspec",
+      "keywords": ["spec-driven", "tdd", "workflow", "specs"]
+    }
+  ]
+}

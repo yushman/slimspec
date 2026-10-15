@@ -9,10 +9,17 @@
 
 ## Установка
 
-Склонировать репозиторий и подключить как плагин:
+В Claude Code:
+
+```
+/plugin marketplace add yushman/slimspec
+/plugin install slimspec@slimspec
+```
+
+Или подключить локальный клон:
 
 ```bash
-git clone <repo-url> ~/src/slimspec
+git clone https://github.com/yushman/slimspec ~/src/slimspec
 claude --plugin-dir ~/src/slimspec
 ```
 
