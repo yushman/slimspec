@@ -10,7 +10,7 @@ Input: `$ARGUMENTS` — change slug and/or what changed; from the router, the de
 
 1. **Resolve** what each finding or input changes (table below); when the user must choose, grill as in explore step 2.
 2. **Patch `explore.md`** in place; a superseded statement is replaced, never left beside its replacement.
-3. **Patch tasks** — reopen only the affected tasks with `invalidated: <reason>` (per the grammar) and adjust their fields; new tasks go in a new wave. Untouched tasks stay `- [x]`. Structural replanning in `medium` / `full`: relaunch `slimspec:planner` with the change notes.
+3. **Patch tasks** — reopen only the affected tasks with `invalidated: <reason>` (per the grammar) and adjust their fields; they keep their lane. New tasks go in a new wave, in lanes. Untouched tasks stay `- [x]`. Structural replanning in `medium` / `full`: relaunch `slimspec:planner` with the change notes.
 4. **Confirm** — show the changes to both files and the reopened tasks; ask approve / change. Nothing goes to apply before approval; approval sets `fix-cycles: 0`.
 5. **Hand off** — router: apply runs only the reopened tasks. Direct call: tell the user `/slimspec <slug>` continues with apply.
 

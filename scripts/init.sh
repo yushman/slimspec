@@ -66,7 +66,13 @@ else
   ask test "test (auto or type a command)" auto
 fi
 
-choice commit "commit" "none task wave" none
+choice commit "commit" "none lane wave" none
+
+while :; do
+  ask agents "apply.agents (max parallel implementers, integer >= 1)" 3
+  case "$agents" in ''|*[!0-9]*|0*) ;; *) break ;; esac
+  echo "  invalid: enter an integer >= 1"
+done
 choice depth "review.depth" "auto low medium high" auto
 
 models=""
@@ -89,7 +95,9 @@ yaml=$(
   if [ "$adr" = y ]; then adr=true; else adr=false; fi
   line "  adr: $adr" "also keep decisions in docs/adr/NNNN-*.md"
   line "test: $(quote "$test")" "auto | an explicit command"
-  line "commit: $commit" "none | task | wave"
+  line "commit: $commit" "none | lane | wave"
+  echo "apply:"
+  line "  agents: $agents" "max parallel implementers = max lanes per wave"
   echo "review:"
   line "  depth: $depth" "auto (by mode) | low | medium | high"
   if [ -n "$models" ]; then

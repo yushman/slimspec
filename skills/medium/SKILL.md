@@ -1,6 +1,6 @@
 ---
 name: medium
-description: "Start a slimspec change in medium mode: scanner and grilling, planner with parallel waves, medium-depth review."
+description: "Start a slimspec change in medium mode: scanner and grilling, planner with parallel lanes, medium-depth review."
 argument-hint: "<idea>"
 disable-model-invocation: true
 ---

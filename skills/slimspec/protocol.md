@@ -13,7 +13,9 @@ spec:
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
-commit: none              # none | task | wave
+commit: none              # none | lane | wave
+apply:
+  agents: 3               # max parallel implementers = max lanes per wave
 review:
   depth: auto             # auto (by mode) | low | medium | high
 models: {}                # per-role overrides, e.g. {implementer: opus}
@@ -46,7 +48,7 @@ Launch `slimspec:scanner | planner | implementer | reviewer | grounder` with the
 
 ## Commits
 
-`none` (default) — never. `task` — after each DONE implementer report, that task's `files`. `wave` — once per wave, after its suite is green. Short imperative lowercase messages. Never push.
+`none` (default) — never. `lane` — once per lane, after all its tasks are DONE, that lane's `files`. `wave` — once per wave, after its suite is green. Short imperative lowercase messages. Never push.
 
 ## Asking the user
 

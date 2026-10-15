@@ -1,5 +1,7 @@
 # slimspec
 
+Website: https://yushman.github.io/slimspec/
+
 [Русская версия](README.ru.md)
 
 Lightweight spec-driven development for Claude Code: explore → plan → apply → verify → ground,
@@ -47,10 +49,13 @@ automatic fix cycles.
 | Phase   | fast                                   | medium                          | full                                          |
 |---------|----------------------------------------|---------------------------------|-----------------------------------------------|
 | explore | inline, ≤3 questions, merged with plan | scanner + grilling              | same + explicit gate on `explore.md`          |
-| plan    | section inside `explore.md`            | planner agent, waves            | same + full `tasks.md` at the gate            |
-| apply   | one implementer, TDD                   | parallel waves                  | same                                          |
+| plan    | section inside `explore.md`            | planner agent, waves of lanes   | same + full `tasks.md` at the gate            |
+| apply   | one implementer, TDD                   | one implementer per lane        | same                                          |
 | verify  | reviewer, depth `low`                  | reviewer, depth `medium`        | reviewer, depth `high`                        |
 | ground  | update touched specs                   | distill + intent check          | same                                          |
+
+The planner splits each wave into lanes of related tasks with disjoint files; apply runs one implementer
+per lane, up to `apply.agents` in parallel, each working through its tasks in order.
 
 TDD is enforced by red/green evidence in every mode; there is no TDD hook. Implementers run only their
 task's tests; the full suite runs once after each wave and once more in verify.
@@ -78,7 +83,9 @@ spec:
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
-commit: none              # none | task | wave
+commit: none              # none | lane | wave
+apply:
+  agents: 3               # max parallel implementers = max lanes per wave
 review:
   depth: auto             # auto (by mode) | low | medium | high
 models: {}                # per-role overrides: scanner, planner, implementer, reviewer, grounder

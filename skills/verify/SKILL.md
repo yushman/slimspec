@@ -17,7 +17,7 @@ Launch one `slimspec:reviewer`: change folder, `base:` sha, test command, depth 
 The reviewer's `kind` is a proposal; you decide:
 
 - **nit** — reported; never a cycle.
-- **blocker / should-fix, implementation** (code misses explore or tasks, missing or wrong red evidence, files outside `files`, tautological test, bug) — reopen the owning task with `fix: <finding>`; no owner → `F<n>` tasks in a new wave.
+- **blocker / should-fix, implementation** (code misses explore or tasks, missing or wrong red evidence, files outside `files`, tautological test, bug) — reopen the owning task with `fix: <finding>`; no owner → `F<n>` tasks in a new wave, in lanes.
 - **blocker / should-fix, design or intent** (design wrong or incomplete, Goal unreachable, a deviation changes a decision) — always to the user, then `refine`.
 
 Never drop a blocker or should-fix to pass. After the report: implementation findings only and `fix-cycles` < 2 → increment, run apply, verify again; at 2 → ask: one more cycle / refine / stop, with the open findings. No blocker or should-fix → pass: return to the router, or tell the user `/slimspec <slug>` continues with ground.

@@ -36,8 +36,8 @@ explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ─�
 | Phase  | fast                           | medium                        | full                                       |
 |--------|--------------------------------|-------------------------------|--------------------------------------------|
 | explore| inline, ≤3 questions, merged with plan | scanner + grilling     | same + explicit gate on explore.md         |
-| plan   | section inside explore.md      | planner agent, waves          | same + gate                                |
-| apply  | one implementer, TDD           | parallel waves                | same                                       |
+| plan   | section inside explore.md      | planner agent, waves of lanes | same + gate                                |
+| apply  | one implementer, TDD           | waves, one implementer per lane | same                                     |
 | verify | reviewer, review depth `low`   | reviewer, review depth `medium` | reviewer, review depth `high`            |
 | ground | update touched specs           | distill + intent check        | same                                       |
 
@@ -85,8 +85,8 @@ questions: []
 
 No raw logs or diffs. Details stay recoverable from the working tree. Role payloads ride in
 extra fields: scanner `brief`, reviewer `findings` (each with a concrete `recommendation`),
-`code_review` and `skipped` (checks skipped for a missing input), grounder `gaps`. The
-`fast` implementer returns one report per task.
+`code_review` and `skipped` (checks skipped for a missing input), grounder `gaps`. An
+implementer returns one report per task of its lane (`fast`: of the change).
 - **Rejected:** full reports (context bloat); report files on disk (one more artifact type).
 
 ### D5. Implementer deviation policy
@@ -103,10 +103,16 @@ the task's `files`, is `BLOCKED`.
 
 ### D7. Plan is written by a planner subagent and is parallel-aware
 The planner gets `explore.md` and the scanner brief, reads code, and writes `tasks.md`
-grouped into waves. Tasks in one wave must have disjoint `files` sets; the planner
-justifies each wave. Parallelism uses disjoint files in the same working tree in every mode.
+grouped into waves, each split into lanes of cohesive tasks (same module or feature thread).
+Lanes of one wave have disjoint `files`; tasks inside a lane may share files and run in listed
+order; waves exist only for dependencies across lanes. Apply runs one implementer per lane, all
+lanes of a wave at once, at most `apply.agents` (default 3); the planner never makes more lanes
+per wave, merging lanes or splitting the wave instead. The planner justifies each wave's lanes,
+which the plan gate shows. Parallelism uses disjoint files in the same working tree in every mode.
 - **Rejected:** worktree isolation in `full` — subagent worktrees branch from committed state,
-  so they miss uncommitted earlier waves unless every wave is committed.
+  so they miss uncommitted earlier waves unless every wave is committed; one implementer per
+  task — repeated cold starts, each re-reading `explore.md`, specs and code; one implementer per
+  wave — loses parallelism; lanes grouped by the main session at apply — invisible at the gate.
 
 ### D8. TDD is enforced by evidence, not tooling
 Each task names its first failing test. The implementer must report a red run before
@@ -154,12 +160,13 @@ cross-module decisions. Missing module specs are created lazily here — there i
 ### D13. Several active changes, one folder per slug
 `.slimspec/changes/<slug>/` holds `explore.md` and `tasks.md`. These are temporary: explore adds
 `.slimspec/changes/` to `.gitignore` when it creates the first folder (`.slimspec/config.yaml` stays
-tracked), so commits under `commit: task | wave` never include change artifacts. `/slimspec` without
+tracked), so commits under `commit: lane | wave` never include change artifacts. `/slimspec` without
 arguments lists active changes to resume or abandon (delete the folder after confirmation, no ground).
 
 ### D14. Git behavior is configurable
-`commit: none | task | wave`, default `none`. The main session commits, never the agents; ground
+`commit: none | lane | wave`, default `none`. The main session commits, never the agents; ground
 commits spec edits when `commit` is not `none`. The framework never pushes.
+- **Rejected:** a commit per task — tasks of one lane may share files and report together, so per-task commits cannot be exact.
 
 ### D15. Entry points and mode selection
 `/slimspec <idea>` drives the whole cycle and resumes from file state. The router's full name is
@@ -175,8 +182,9 @@ scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus,
 grounder — opus. Set in agent frontmatter and overridable in config.
 
 ### D17. `tasks.md` is semi-strict markdown
-Fixed: the `base:` / `fix-cycles:` header lines, checkboxes, task ids, wave headings, the
-`invalidated:` / `fix:` markers, the `files` / `test-first` (or `test: none`) / `done` fields, and
+Fixed: the `base:` / `fix-cycles:` header lines, checkboxes, task ids, wave headings with their
+lanes, the `invalidated:` / `fix:` markers, the `lane` / `files` / `test-first` (or `test: none`) /
+`done` fields, and
 the indented `evidence:` / `deviations:` lines under done tasks (reopening deletes them).
 Everything else is free text. This is enough for the router to resume.
 - **Rejected:** YAML blocks — easier to parse, harder to read at the plan gate.
@@ -256,13 +264,13 @@ mode: fast | medium | full
 ```markdown
 base: <sha at apply start>
 fix-cycles: 0
-## Wave 1 (parallel — disjoint files: auth/*, billing/*)
-- [x] T1 · files: src/auth/** · test-first: "rejects expired token" · done: 401 on expired
+## Wave 1 (lane A: src/auth/* · lane B: src/billing/*)
+- [x] T1 · lane: A · files: src/auth/** · test-first: "rejects expired token" · done: 401 on expired
   evidence: red "rejects expired token — FAIL (expected 401, got 200)" · green "12 passed"
-- [ ] T2 · files: src/billing/** · test: none — config only · check: build
-## Wave 2 (depends: T1)
-- [ ] T3 · invalidated: <reason> · ...
-- [ ] F1 · fix: <finding> · ...
+- [ ] T2 · lane: B · files: src/billing/** · test: none — config only · check: build
+## Wave 2 (depends: T1 · lane A: src/api/*)
+- [ ] T3 · invalidated: <reason> · lane: A · ...
+- [ ] F1 · fix: <finding> · lane: A · ...
 ```
 
 Markers: `invalidated:` (reopened by refine), `fix:` (reopened by verify), `F<n>` (fix task
@@ -279,7 +287,9 @@ spec:
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
-commit: none              # none | task | wave
+commit: none              # none | lane | wave
+apply:
+  agents: 3               # max parallel implementers = max lanes per wave
 review:
   depth: auto             # auto (by mode) | low | medium | high
 models: {}                # per-role overrides

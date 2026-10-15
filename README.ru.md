@@ -1,5 +1,7 @@
 # slimspec
 
+Сайт: https://yushman.github.io/slimspec/ru/
+
 [English version](README.md)
 
 Легковесный spec-driven development для Claude Code: explore → plan → apply → verify → ground,
@@ -47,10 +49,13 @@ claude --plugin-dir ~/src/slimspec
 | Фаза    | fast                                       | medium                         | full                                          |
 |---------|--------------------------------------------|--------------------------------|-----------------------------------------------|
 | explore | inline, ≤3 вопросов, вместе с plan         | scanner + grilling             | то же + явный гейт на `explore.md`            |
-| plan    | секция внутри `explore.md`                 | агент planner, волны           | то же + полный `tasks.md` на гейте            |
-| apply   | один implementer, TDD                      | параллельные волны             | то же                                         |
+| plan    | секция внутри `explore.md`                 | агент planner, волны из дорожек | то же + полный `tasks.md` на гейте            |
+| apply   | один implementer, TDD                      | по implementer на дорожку      | то же                                         |
 | verify  | reviewer, глубина `low`                    | reviewer, глубина `medium`     | reviewer, глубина `high`                      |
 | ground  | обновить затронутые спеки                  | дистилляция + проверка намерения | то же                                       |
+
+Planner делит каждую волну на дорожки из связанных задач с непересекающимися файлами. Apply запускает
+по implementer на дорожку, до `apply.agents` параллельно, и каждый проходит свои задачи по порядку.
 
 TDD во всех режимах проверяется по свидетельствам red/green; TDD-хука нет. Implementer гоняет только
 тесты своей задачи; полный набор тестов запускается один раз после каждой волны и ещё раз в verify.
@@ -79,7 +84,9 @@ spec:
   unit: auto              # auto (по билд-файлам) | glob директорий, напр. "src/*/"
   adr: false              # дополнительно вести решения в docs/adr/NNNN-*.md
 test: auto                # или явная команда
-commit: none              # none | task | wave
+commit: none              # none | lane | wave
+apply:
+  agents: 3               # максимум параллельных implementer = максимум дорожек в волне
 review:
   depth: auto             # auto (по режиму) | low | medium | high
 models: {}                # переопределения по ролям: scanner, planner, implementer, reviewer, grounder

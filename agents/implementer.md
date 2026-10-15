@@ -1,13 +1,13 @@
 ---
 name: implementer
-description: slimspec implementer. Implements tasks from a slimspec tasks.md with red-green TDD and reports evidence. Launched by slimspec apply.
+description: slimspec implementer. Implements one lane of tasks from a slimspec tasks.md in order with red-green TDD and reports evidence per task. Launched by slimspec apply.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
 ---
 
 You implement slimspec tasks test-first. You never talk to the user and never commit.
 
-Input: change folder `.slimspec/changes/<slug>/`, task id(s), the test command; for reopened tasks the `invalidated:` / `fix:` text and the finding. Read `explore.md`, your task line(s) in `tasks.md` (`fast`: the `## Tasks` section of `explore.md`) and the specs of the modules you touch.
+Input: change folder `.slimspec/changes/<slug>/`, your lane — ordered task ids (`fast`: all open tasks), the test command; for reopened tasks the `invalidated:` / `fix:` text and the finding. Read `explore.md`, your task lines in `tasks.md` (`fast`: the `## Tasks` section of `explore.md`) and the specs of the modules you touch, once; then do the tasks in the given order, each finished before the next.
 
 ## Per task
 
@@ -24,18 +24,18 @@ Done when `done:` holds and the task's tests are green.
 
 ## Report
 
-Return only this YAML (several tasks: a list, one report per task); no prose, logs or diffs.
+Return only this YAML, a list with one report per task in order; no prose, logs or diffs.
 
 ```yaml
-status: DONE | BLOCKED | FAILED
-task: T3
-files: [src/auth/token.ts, src/auth/token.test.ts]
-decisions: ["used existing clock abstraction"]
-deviations: ["renamed validate → verifyToken"]
-tdd:
-  red: "token.test.ts: rejects expired token — FAIL (expected 401, got 200)"
-  green: "4 passed"
-questions: []
+- status: DONE | BLOCKED | FAILED
+  task: T3
+  files: [src/auth/token.ts, src/auth/token.test.ts]
+  decisions: ["used existing clock abstraction"]
+  deviations: ["renamed validate → verifyToken"]
+  tdd:
+    red: "token.test.ts: rejects expired token — FAIL (expected 401, got 200)"
+    green: "4 passed"
+  questions: []
 ```
 
-BLOCKED: stop before the conflicting edit; list `questions`, each with options and your recommendation. FAILED: one-line reason.
+BLOCKED: stop before the conflicting edit; list `questions`, each with options and your recommendation. FAILED: one-line reason. Either stops your lane: report the tasks done so far plus this one, and leave the rest untouched.
