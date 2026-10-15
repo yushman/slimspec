@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>slimspec — lightweight specs for Claude Code</title>
+<meta name="description" content="slimspec is a Claude Code plugin: explore, plan, apply, verify, ground with mandatory red-green TDD, two temporary files per change and one compact spec per module as a nested CLAUDE.md.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yushman.github.io/slimspec/">
+<meta property="og:title" content="slimspec — lightweight specs for Claude Code">
+<meta property="og:description" content="Strong models don't need heavy specs. slimspec keeps the explore → plan → apply → verify loop and red-green TDD, and drops the artifact sprawl.">
+<link rel="alternate" hreflang="ru" href="https://yushman.github.io/slimspec/ru/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #fbfbf9;
+  --surface: #f1f2ee;
+  --text: #1c1f23;
+  --muted: #5b616b;
+  --border: #dcded8;
+  --accent: #0f766e;
+  --accent-soft: #e3f1ef;
+  --code-bg: #f1f2ee;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121416;
+    --surface: #1b1e22;
+    --text: #e4e5e2;
+    --muted: #9ba1a9;
+    --border: #2d3238;
+    --accent: #4cc2b5;
+    --accent-soft: #17302d;
+    --code-bg: #1b1e22;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.65 var(--sans);
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+header.top { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
+header.top .brand { font-family: var(--mono); font-weight: 600; color: var(--text); text-decoration: none; }
+header.top nav { display: flex; gap: 18px; font-size: 15px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+h1, h2, h3 { line-height: 1.25; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 6vw, 40px); margin: 40px 0 16px; }
+h2 { font-size: 24px; margin: 56px 0 12px; padding-top: 24px; border-top: 1px solid var(--border); }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+p, ul, ol { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; }
+li { margin-bottom: 6px; }
+.lead { font-size: 19px; color: var(--muted); }
+.muted { color: var(--muted); }
+small, .note { font-size: 15px; color: var(--muted); }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+pre {
+  font-family: var(--mono); font-size: 14px; line-height: 1.55;
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; overflow-x: auto; margin: 0 0 16px;
+}
+pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.cmt { color: var(--muted); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-top: 4px; }
+.btn { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; font-size: 15px; }
+.table-scroll { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--border); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 15px; line-height: 1.5; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: 0; }
+thead th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+td.num, th.num { white-space: nowrap; }
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.diagram { margin: 8px 0 20px; }
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram .narrow { display: none; max-width: 360px; margin: 0 auto; }
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .diagram .wide { display: none; }
+  .diagram .narrow { display: block; }
+  header.top nav { gap: 14px; }
+  pre { font-size: 12.5px; padding: 12px; }
+}
+svg .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+svg .box.hl { stroke: var(--accent); }
+svg .lbl { fill: var(--text); font: 600 15px var(--mono); }
+svg .edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+svg .edge.loop { stroke-dasharray: 5 4; }
+svg .tag { fill: var(--accent); font: 12px var(--mono); }
+svg .tip { fill: var(--muted); }
+dl.phases { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 16px; }
+dl.phases dt { font-family: var(--mono); font-weight: 600; }
+dl.phases dd { margin: 0; }
+@media (max-width: 480px) {
+  dl.phases { grid-template-columns: 1fr; gap: 0; }
+  dl.phases dd { margin-bottom: 10px; }
+}
+footer { margin: 64px 0 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 15px; color: var(--muted); }
+footer a { margin-right: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <a class="brand" href="./">slimspec</a>
+  <nav>
+    <a href="https://github.com/yushman/slimspec">GitHub</a>
+    <a href="ru/" hreflang="ru" lang="ru">Русский</a>
+  </nav>
+</header>
+
+<main>
+
+<h1>Strong models don't need heavy specs.</h1>
+<p class="lead">They read code fast. What they need is a short hint of where to look and what must not break. slimspec is a Claude Code plugin that keeps the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop and mandatory red-green TDD, but drops the artifact sprawl: two temporary files per change, and one compact spec per module as a nested <code>CLAUDE.md</code> that Claude Code loads on its own.</p>
+
+<pre><code>/plugin marketplace add yushman/slimspec
+/plugin install slimspec@slimspec</code></pre>
+
+<div class="cta">
+  <a class="btn" href="https://github.com/yushman/slimspec">View on GitHub</a>
+  <span class="note">Then: <code>/slimspec &lt;idea&gt;</code></span>
+</div>
+
+<h2 id="result">A real migration</h2>
+<p>One existing project, a Rust + web log viewer, was moved from OpenSpec with <code>/slimspec:migrate-openspec</code>. Before and after:</p>
+
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>OpenSpec</th><th>slimspec</th></tr></thead>
+  <tbody>
+    <tr><td>Behavior specs</td><td class="num">23 files, 2,941 lines, ~155&nbsp;KB</td><td class="num">3 files, 484 lines, ~34&nbsp;KB</td></tr>
+    <tr><td>Change archive</td><td class="num">23 changes, 12,394 lines, ~733&nbsp;KB</td><td class="num">0</td></tr>
+    <tr><td>Root <code>CLAUDE.md</code></td><td class="num">130 lines</td><td class="num">121 lines</td></tr>
+    <tr><td>Files in <code>openspec/</code></td><td class="num">200</td><td class="num">0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Where the size went</h3>
+<ul>
+  <li>WHEN/THEN scenarios were folded into the requirements they describe. Empty Purpose sections and SHALL boilerplate are gone.</li>
+  <li>One spec per module instead of 23 per feature. The agent reads only the spec of the module it works in: an edit in <code>web/</code> pulls ~11&nbsp;KB, not a set of capability files scattered across the tree.</li>
+  <li>The change archive is out of the working tree. It is still in that project's git history.</li>
+</ul>
+
+<h3>What was lost</h3>
+<div class="callout">
+<ul>
+  <li>Scenarios no longer exist as a list of test cases.</li>
+  <li>Per-change rationale is gone. Part of it lives on in ADRs; the rest is only in git history.</li>
+  <li>The largest module spec (~14&nbsp;KB) is loaded whole for any work in that module.</li>
+</ul>
+</div>
+<p class="note">This is one project, not a benchmark. Your numbers will depend on how your specs were written.</p>
+
+<h2 id="flow">The flow</h2>
+
+<div class="diagram" role="img" aria-label="explore, gate, plan, gate, apply, verify, ground. Verify sends implementation bugs back to apply as fixes and design issues to refine; refine patches explore and sends invalidated tasks back to apply.">
+<svg class="wide" viewBox="0 0 720 200" aria-hidden="true">
+  <defs><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="box hl" x="10" y="50" width="100" height="44" rx="7"/><text class="lbl" x="60" y="77" text-anchor="middle">explore</text>
+  <rect class="box hl" x="160" y="50" width="100" height="44" rx="7"/><text class="lbl" x="210" y="77" text-anchor="middle">plan</text>
+  <rect class="box" x="310" y="50" width="100" height="44" rx="7"/><text class="lbl" x="360" y="77" text-anchor="middle">apply</text>
+  <rect class="box" x="460" y="50" width="100" height="44" rx="7"/><text class="lbl" x="510" y="77" text-anchor="middle">verify</text>
+  <rect class="box" x="610" y="50" width="100" height="44" rx="7"/><text class="lbl" x="660" y="77" text-anchor="middle">ground</text>
+  <path class="edge" d="M110 72H157" marker-end="url(#aw)"/><text class="tag" x="135" y="64" text-anchor="middle">gate</text>
+  <path class="edge" d="M260 72H307" marker-end="url(#aw)"/><text class="tag" x="285" y="64" text-anchor="middle">gate</text>
+  <path class="edge" d="M410 72H457" marker-end="url(#aw)"/>
+  <path class="edge" d="M560 72H607" marker-end="url(#aw)"/>
+  <path class="edge loop" d="M500 50C500 18 370 18 370 47" marker-end="url(#aw)"/><text class="tag" x="435" y="20" text-anchor="middle">fix</text>
+  <rect class="box" x="185" y="146" width="100" height="40" rx="7"/><text class="lbl" x="235" y="171" text-anchor="middle">refine</text>
+  <path class="edge loop" d="M520 94V166H288" marker-end="url(#aw)"/>
+  <path class="edge loop" d="M185 166H60V97" marker-end="url(#aw)"/>
+  <path class="edge loop" d="M260 146V120H350V97" marker-end="url(#aw)"/>
+</svg>
+<svg class="narrow" viewBox="0 0 340 400" aria-hidden="true">
+  <defs><marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="box hl" x="40" y="10" width="130" height="40" rx="7"/><text class="lbl" x="105" y="35" text-anchor="middle">explore</text>
+  <rect class="box hl" x="40" y="90" width="130" height="40" rx="7"/><text class="lbl" x="105" y="115" text-anchor="middle">plan</text>
+  <rect class="box" x="40" y="170" width="130" height="40" rx="7"/><text class="lbl" x="105" y="195" text-anchor="middle">apply</text>
+  <rect class="box" x="40" y="250" width="130" height="40" rx="7"/><text class="lbl" x="105" y="275" text-anchor="middle">verify</text>
+  <rect class="box" x="40" y="330" width="130" height="40" rx="7"/><text class="lbl" x="105" y="355" text-anchor="middle">ground</text>
+  <path class="edge" d="M105 50V87" marker-end="url(#an)"/><text class="tag" x="113" y="73">gate</text>
+  <path class="edge" d="M105 130V167" marker-end="url(#an)"/><text class="tag" x="113" y="153">gate</text>
+  <path class="edge" d="M105 210V247" marker-end="url(#an)"/>
+  <path class="edge" d="M105 290V327" marker-end="url(#an)"/>
+  <path class="edge loop" d="M40 270H16V190H37" marker-end="url(#an)"/><text class="tag" x="4" y="234" transform="rotate(-90 10 230)">fix</text>
+  <rect class="box" x="215" y="170" width="110" height="40" rx="7"/><text class="lbl" x="270" y="195" text-anchor="middle">refine</text>
+  <path class="edge loop" d="M170 270H270V213" marker-end="url(#an)"/>
+  <path class="edge loop" d="M270 170V30H173" marker-end="url(#an)"/>
+  <path class="edge loop" d="M215 190H173" marker-end="url(#an)"/>
+</svg>
+</div>
+
+<dl class="phases">
+  <dt>explore</dt><dd>A scanner reads module specs, then code, and returns a short brief. The main session asks you one decision at a time and writes <code>explore.md</code>. It never moves on to a plan by itself.</dd>
+  <dt>plan</dt><dd>A planner writes <code>tasks.md</code> in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.</dd>
+  <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave.</dd>
+  <dt>verify</dt><dd>A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through <code>refine</code>.</dd>
+  <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.</dd>
+</dl>
+
+<p>You stop twice: after explore and after plan. The rest runs on its own and comes back to you only for agent questions, design findings, or after two automatic fix cycles.</p>
+<p>The main session owns every decision. Subagents execute and return a short structured report (status, files, decisions, deviations, red/green evidence). They never ask you directly: an open question comes back as <code>BLOCKED</code>, the main session asks you and relaunches the agent with the answer.</p>
+<p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. The folder is gitignored and removed after ground; the history is your commits and the updated specs.</p>
+
+<h2 id="modes">Modes</h2>
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Phase</th><th>fast</th><th>medium</th><th>full</th></tr></thead>
+  <tbody>
+    <tr><td><code>explore</code></td><td>inline, ≤3 questions, merged with plan</td><td>scanner + grilling</td><td>same + explicit gate on <code>explore.md</code></td></tr>
+    <tr><td><code>plan</code></td><td>section inside <code>explore.md</code></td><td>planner agent, waves of lanes</td><td>same + full <code>tasks.md</code> at the gate</td></tr>
+    <tr><td><code>apply</code></td><td>one implementer, TDD</td><td>one implementer per lane</td><td>same</td></tr>
+    <tr><td><code>verify</code></td><td>reviewer, depth <code>low</code></td><td>reviewer, depth <code>medium</code></td><td>reviewer, depth <code>high</code></td></tr>
+    <tr><td><code>ground</code></td><td>update touched specs</td><td>distill + intent check</td><td>same</td></tr>
+  </tbody>
+</table>
+</div>
+<pre><code>/slimspec &lt;idea&gt;          <span class="cmt"># mode from config, suggested after the scan</span>
+/slimspec:fast &lt;idea&gt;     <span class="cmt"># fixed mode, no suggestion</span>
+/slimspec:medium &lt;idea&gt;
+/slimspec:full &lt;idea&gt;
+/slimspec                 <span class="cmt"># list active changes: resume or abandon</span></code></pre>
+<p class="note">Each phase is also a command of its own: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
+
+<h2 id="compare">Compared with OpenSpec and Superpowers</h2>
+<p>slimspec borrows from both. The table covers only the parts slimspec does differently; why it changes them comes from the author's own use of both tools.</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th>slimspec</th></tr></thead>
+  <tbody>
+    <tr><td>Flow</td><td>explore → propose → apply → verify → archive, a command per step; explore and verify are optional</td><td>brainstorming → worktree → plan → execute → finish branch; skills trigger on their own</td><td>one command runs explore → ground; you stop at two gates</td></tr>
+    <tr><td>Artifacts per change</td><td>proposal, design, tasks, delta specs; the folder then moves to an archive in the repo</td><td>for a project: a dated design doc in <code>docs/superpowers/specs/</code> (committed) and a plan in <code>docs/superpowers/plans/</code>; small changes stay in chat</td><td><code>explore.md</code> + <code>tasks.md</code>, gitignored, deleted after ground</td></tr>
+    <tr><td>Spec merge</td><td>ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive</td><td>no merge into a living spec; one design doc per project</td><td>the model merges into the module spec, rewrites contradictions, checks intent</td></tr>
+    <tr><td>Subagents</td><td>no built-in subagent mechanism</td><td>a fresh subagent per task with a review after each, or inline execution</td><td>scanner, planner, implementers, reviewer, grounder; structured reports, questions bubble up</td></tr>
+    <tr><td>Explore</td><td><code>/opsx:explore</code>, an optional thinking partner before a proposal</td><td>brainstorming; once a project's design is approved, the next step is a plan</td><td>grilling one decision at a time; plan starts only after your gate</td></tr>
+  </tbody>
+</table>
+</div>
+<p><strong>What they do better.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers covers far more ground: debugging, worktrees, code review and other skills beyond the spec flow, across many coding agents. slimspec works only with Claude Code and only does the spec-driven loop.</p>
+
+<h2 id="migrate">Migrating from OpenSpec or Superpowers</h2>
+<pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → module specs</span>
+/slimspec:migrate-superpowers  <span class="cmt"># Superpowers design docs → module specs</span></code></pre>
+<ul>
+  <li>Specs only. Each source spec is mapped onto modules, distilled into your <code>spec.format</code> and checked against the code.</li>
+  <li>You approve a source → spec table first, and decide on every statement the code disagrees with.</li>
+  <li>Changes, plans and tooling are not converted. They are deleted only at a final cleanup step, and only what you confirm. Code is never touched.</li>
+  <li>The Superpowers plugin itself you remove with <code>/plugin uninstall</code>.</li>
+</ul>
+
+<h2 id="config">Config</h2>
+<p>Optional. Without a config every key has a default. <code>/slimspec:init</code> tells you how to run a small wizard that asks one question per key and writes <code>.slimspec/config.yaml</code>:</p>
+<pre><code>mode: medium              <span class="cmt"># fast | medium | full</span>
+spec:
+  format: claude-md       <span class="cmt"># claude-md | readme | central | native | none</span>
+  unit: auto              <span class="cmt"># auto (by build files) | dir glob, e.g. "src/*/"</span>
+  adr: false              <span class="cmt"># also keep decisions in docs/adr/NNNN-*.md</span>
+test: auto                <span class="cmt"># or an explicit command</span>
+commit: none              <span class="cmt"># none | lane | wave</span>
+apply:
+  agents: 3               <span class="cmt"># max parallel implementers = max lanes per wave</span>
+review:
+  depth: auto             <span class="cmt"># auto (by mode) | low | medium | high</span>
+models: {}                <span class="cmt"># per-role overrides</span></code></pre>
+<p class="note">Default models: scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus, grounder — opus. slimspec never pushes.</p>
+
+</main>
+
+<footer>
+  <p>
+    <a href="https://github.com/yushman/slimspec">GitHub</a>
+    <a href="https://github.com/yushman/slimspec/blob/main/DESIGN.md">Design and decisions</a>
+    <a href="https://github.com/yushman/slimspec/blob/main/LICENSE">MIT license</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
