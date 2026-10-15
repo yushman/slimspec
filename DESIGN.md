@@ -206,6 +206,30 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 - **Rejected:** auto-creating config on first run (unrequested files); an `AskUserQuestion`-driven
   init skill (many round trips for an optional step).
 
+### D21. Migration from OpenSpec and Superpowers
+- **Context:** projects that adopt slimspec often carry OpenSpec capability specs or Superpowers
+  design docs; that knowledge should land in module specs, and the old files should not stay as a
+  second source of truth.
+- **Choice:** two user-invoked skills, `/slimspec:migrate-openspec` and
+  `/slimspec:migrate-superpowers`, that only produce specs in the configured `spec.format`:
+  - Specs only: OpenSpec `openspec/specs/*/spec.md` (plus `project.md` / `config.yaml` context for
+    the root `CLAUDE.md`); Superpowers design docs count as its specs. Changes, plans and ledgers
+    are never converted — they are only listed for cleanup. No source specs — nothing is generated.
+  - Isolated: everything lives in the two skill folders. They run inline or launch general-purpose
+    agents with prompts from their own folder, and only read `agents/grounder.md` for its merge
+    rules and spec locations; core agents, skills and the change flow are untouched.
+  - Flow: detect → map sources onto modules → mapping gate (source → spec table, ambiguities asked
+    one by one) → distill with a code cross-check (a statement the code contradicts or does not
+    show is asked about: drop / write as stated) → summary.
+  - Cleanup after confirmation: a separate final step lists everything to delete (source specs,
+    changes, plans, tooling, workflow lines in `CLAUDE.md`) and deletes only what the user approves.
+    History stays in git (as in D12). The Superpowers plugin is uninstalled by the user.
+- **Rejected:** converting active changes and plans into `.slimspec/changes/` — needs new grammar,
+  evidence markers and reviewer exceptions for work slimspec did not plan; switching to `central`
+  specs to mirror OpenSpec's per-capability files — splits specs from code, against D11; extending
+  the core agents and skills for migration — a one-off job would add permanent weight to every
+  cycle; one combined skill — the two sources share no format.
+
 ## Artifacts
 
 ### explore.md
@@ -281,6 +305,8 @@ slimspec/
     refine/
     ground/
     init/       # /slimspec:init — points to scripts/init.sh
+    migrate-openspec/     # /slimspec:migrate-openspec — shared migration flow and agent prompts
+    migrate-superpowers/  # /slimspec:migrate-superpowers — source rules, uses the flow above
   agents/
     scanner.md
     planner.md

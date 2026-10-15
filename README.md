@@ -53,6 +53,18 @@ automatic fix cycles.
 
 TDD is enforced by red/green evidence in every mode; there is no TDD hook.
 
+## Migrating
+
+```
+/slimspec:migrate-openspec     # openspec/specs/ → module specs
+/slimspec:migrate-superpowers  # Superpowers design docs → module specs
+```
+
+Specs only: each source spec is mapped onto modules, distilled into the configured `spec.format` and
+checked against the code. You approve a source → spec table first and decide on every statement the
+code disagrees with. Changes, plans and tooling are not converted; they are deleted only at a final
+cleanup question. Code is never touched. Superpowers itself you uninstall with `/plugin uninstall`.
+
 ## Config
 
 `.slimspec/config.yaml`, optional; every key has a default:
