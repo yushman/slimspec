@@ -70,5 +70,11 @@ review:
 models: {}                # per-role overrides: scanner, planner, implementer, reviewer, grounder
 ```
 
+Run `/slimspec:init` for an interactive setup, or directly from the project root:
+
+```bash
+bash "<plugin dir>/scripts/init.sh"
+```
+
 Default models: scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus, grounder — opus.
 slimspec never pushes.

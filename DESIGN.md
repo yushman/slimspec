@@ -3,7 +3,7 @@
 ## Goal
 
 A lightweight spec-driven development framework for Claude Code, shipped as a plugin of
-skills and agent definitions only (no runtime scripts). It keeps what works in OpenSpec
+skills and agent definitions only (no runtime scripts; one optional user-run setup script). It keeps what works in OpenSpec
 and Superpowers — an explore → plan → apply loop, specs as artifacts, mandatory red-green
 TDD — and drops what slows them down: long multi-step flows, artifact sprawl,
 keyword-based spec merging, brainstorming that always pushes toward a plan, and
@@ -21,7 +21,7 @@ Success looks like:
 ## Non-goals
 
 - Support for agents other than Claude Code.
-- A CLI, daemon, hooks or any scripts.
+- A CLI, daemon, hooks or runtime scripts (the one optional setup script, D20, is never invoked by the framework).
 - Persistent change history inside the repo (git is the history).
 - Up-front spec generation for a whole project.
 
@@ -198,6 +198,14 @@ and is passed to `/code-review` as its effort level (the fallback pass scales th
 Severities: `blocker`, `should-fix`, `nit`. Blockers and should-fix items enter the fix
 cycle (D9); nits are listed in the summary and never trigger a cycle.
 
+### D20. Optional init wizard
+- **Context:** config is optional, but its options are invisible until the user reads the docs.
+- **Choice:** `scripts/init.sh`, a bash wizard the user runs in their own terminal; it asks one
+  question per key and writes `.slimspec/config.yaml`. It is the only script in the plugin and the
+  framework never invokes it. `/slimspec:init` only tells the user how to run it.
+- **Rejected:** auto-creating config on first run (unrequested files); an `AskUserQuestion`-driven
+  init skill (many round trips for an optional step).
+
 ## Artifacts
 
 ### explore.md
@@ -272,10 +280,13 @@ slimspec/
     verify/
     refine/
     ground/
+    init/       # /slimspec:init — points to scripts/init.sh
   agents/
     scanner.md
     planner.md
     implementer.md
     reviewer.md
     grounder.md
+  scripts/
+    init.sh     # optional config wizard, run by the user
 ```

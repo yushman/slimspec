@@ -70,5 +70,11 @@ review:
 models: {}                # переопределения по ролям: scanner, planner, implementer, reviewer, grounder
 ```
 
+Интерактивная настройка: `/slimspec:init`, либо напрямую из корня проекта:
+
+```bash
+bash "<каталог плагина>/scripts/init.sh"
+```
+
 Модели по умолчанию: scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus, grounder — opus.
 slimspec никогда не пушит.
