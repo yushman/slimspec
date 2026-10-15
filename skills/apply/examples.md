@@ -1,33 +1,27 @@
 # apply output examples
 
-What the main session shows the user during apply. Change: `login-lockout` (tasks in `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/examples.md`), mode `medium`, 4 tasks in 2 waves. Agent reports stay YAML and stay in the session; the user sees only these lines.
+What the user sees during apply. Change: `login-lockout` (tasks in `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/examples.md`), mode `medium`, 4 tasks in 2 waves. Agent YAML stays in the session.
 
 ## Progress
 
 ```
-## Apply · login-lockout (medium) · 0/4
-Wave 1 · launched T1, T2 (parallel)
-Wave 1 · T1 done 1/4 — migration 0012_login_attempts; check: migrate up/down passed (test: none — migration)
-Wave 1 · T2 done 2/4 — red "locks the account on the 5th failure within 15 minutes" (expected locked_until, got null) → green 31 passed
-Wave 2 · launched T3, T4 (parallel)
-Wave 2 · T4 done 3/4 — red "POST /login returns 429 with Retry-After…" (expected 429, got 401) → green 148 passed
-Wave 2 · T3 done 4/4 — red "rejects a locked account before checking the password" → green 152 passed · deviation: extra helper `clearFailures` in attempts-store.ts
+T1 done 1/4 · check: migrate up/down passed (test: none — migration)
+T2 done 2/4 · red "locks the account on the 5th failure within 15 minutes" → green 6 passed
+Wave 1 · T1, T2 · suite 131 passed
+T4 done 3/4 · red "POST /login returns 429 with Retry-After…" → green 9 passed
+T3 done 4/4 · red "rejects a locked account before checking the password" → green 7 passed · deviation: extra helper `clearFailures` in attempts-store.ts
+Wave 2 · T3, T4 · suite 152 passed · apply done → verify
 ```
 
-Reports arrive in any order within a wave; print each as it comes. The counter is closed tasks / all tasks of the change.
+Task lines come in report order; the counter is closed tasks / all tasks of the change. Called directly (`/slimspec:apply`), the last line ends `→ /slimspec login-lockout continues with verify`.
 
 ## Pause on BLOCKED
 
-Another run of the same wave:
-
 ```
-## Apply paused · login-lockout · 3/4
-Wave 2 · T4 BLOCKED
-Needs packages/auth/src/index.ts (outside T4 files): @acme/auth does not export AccountLockedError.
-Wave 2 · T3 done 3/4 — finished before the pause; kept.
+Apply paused · login-lockout · 3/4 · T4 BLOCKED: needs packages/auth/src/index.ts (outside T4 files) to export AccountLockedError
 ```
 
-Then the agent's question, through `AskUserQuestion`, never as text:
+Then the agent's question through `AskUserQuestion`:
 
 ```yaml
 question: "T4 needs packages/auth/src/index.ts to export AccountLockedError. How to proceed?"
@@ -43,26 +37,10 @@ options:
 
 On "add": append the file to T4's `files` in `tasks.md`, relaunch T4 with the original prompt plus the answer. An answer that contradicts a Decision goes through `refine` first.
 
-## Pause on FAILED
+## Pause on a red wave suite
 
 ```
-## Apply paused · login-lockout · 3/4
-Wave 2 · T4 FAILED — full suite red before any change: packages/api/src/routes/health.test.ts (outside the change).
+Apply paused · login-lockout · 4/4 · Wave 2 suite FAILED: 2 failing in packages/api/src/routes/session.test.ts — likely T4 (login.ts shares the error mapper)
 ```
 
-Followed by `AskUserQuestion`: retry T4 / fix the unrelated failure first / stop.
-
-## Completion
-
-```
-## Apply done · login-lockout · 4/4 tasks · 2 waves
-- T1 migration 0012_login_attempts — check passed (test: none — migration)
-- T2 lockout policy — red → green
-- T3 login rejects locked accounts — red → green
-- T4 POST /login 429 + Retry-After — red → green
-Deviations: T3 extra helper `clearFailures` in attempts-store.ts
-Commits: none (commit: none)
-Next: verify, running now.
-```
-
-Called directly (`/slimspec:apply`), the last line is: `Next: /slimspec login-lockout continues with verify.`
+Followed by `AskUserQuestion`: reopen T4 with `fix: <failure>` (recommended) / stop.

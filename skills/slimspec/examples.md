@@ -90,7 +90,7 @@ The migration and the policy share no files; the policy takes a store interface,
 ## Wave 2 (depends: T1, T2)
 T3 and T4 touch different packages; T4 needs only the `AccountLockedError` type from T2.
 - [x] T3 · files: packages/auth/src/login.ts, packages/auth/src/login.test.ts, packages/auth/src/attempts-store.ts · test-first: "rejects a locked account before checking the password" · done: locked → `AccountLockedError` without a bcrypt compare; wrong password → failure recorded; success → count cleared
-  evidence: red "rejects a locked account before checking the password — FAIL (expected AccountLockedError, got token pair)" · green "152 passed"
+  evidence: red "rejects a locked account before checking the password — FAIL (expected AccountLockedError, got token pair)" · green "7 passed"
   deviations: extra helper `clearFailures` in attempts-store.ts
 - [ ] T4 · fix: 429 response has no Retry-After header (login.ts:48) · files: packages/api/src/routes/login.ts, packages/api/src/routes/login.test.ts · test-first: "POST /login returns 429 with Retry-After for a locked account" · done: 429 + `Retry-After` in seconds; unknown email still 401
 

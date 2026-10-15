@@ -1,6 +1,6 @@
 # explore.md template
 
-Write `.slimspec/changes/<slug>/explore.md` in exactly this shape. Keep each section short; every line must be a decision-grade fact, not process notes. Before writing it, read the filled example in [examples.md](examples.md).
+Write `.slimspec/changes/<slug>/explore.md` in exactly this shape: short sections, every line a decision-grade fact, no process notes. Unsure about the shape → see the filled example in [examples.md](examples.md).
 
 ```markdown
 # <change title>
@@ -22,4 +22,4 @@ mode: <fast | medium | full>
 - <risk — mitigation or "accepted">
 ```
 
-`fast` only: append a `## Tasks` section that follows the grammar in `tasks-template.md` (one wave is typical).
+`fast` only: append `## Tasks` in the grammar of `tasks-template.md` (usually one wave).

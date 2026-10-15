@@ -95,13 +95,8 @@ Root `CLAUDE.md` — unchanged: no decision spans modules.
 ## Ground summary for the user
 
 ```
-## Ground · login-lockout · closed
-Specs:
-- packages/auth/CLAUDE.md — updated: added Lockout (6 statements) and 1 Login statement; modified login() errors; removed "failures not tracked"
-- packages/api/CLAUDE.md — updated: modified POST /login and POST /session/refresh (429 + Retry-After)
+Ground · login-lockout · closed · no commit (commit: none)
+- packages/auth/CLAUDE.md — updated: add Lockout (6 statements) + 1 Login statement; modify login() errors; remove "failures not tracked"
+- packages/api/CLAUDE.md — updated: modify POST /login, POST /session/refresh (429 + Retry-After)
 - packages/db/CLAUDE.md — created: login_attempts table
-- root CLAUDE.md — unchanged
-Intent check: Goal 4/4 and Decisions 4/4 matched, no gaps
-Tests: 158 passed · Nits left: packages/auth/src/lockout.ts:12 — name the thresholds
-Commit: none (commit: none) · .slimspec/changes/login-lockout/ deleted
 ```

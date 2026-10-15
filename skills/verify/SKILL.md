@@ -1,47 +1,30 @@
 ---
 name: verify
-description: "Verify an applied slimspec change: reviewer agents check plan and design conformance, TDD evidence, deviations and code review, then findings are triaged. Use when the user runs /slimspec:verify or asks to review or check a slimspec change after apply."
+description: "Verify an applied slimspec change: a reviewer checks plan, design, TDD evidence and code; findings are triaged. Use for /slimspec:verify or to review a slimspec change after apply."
 argument-hint: "[change-slug]"
 ---
 
 # verify
 
-Input: `$ARGUMENTS` — change slug (ask which when several are active). Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/protocol.md` first unless it is already loaded. Every task must be `- [x]`; otherwise run apply first.
+Input: `$ARGUMENTS` — change slug. Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/protocol.md` unless loaded. Every task must be `- [x]`, else run apply. Never fix code here.
 
 ## 1. Review
 
-Depth: `review.depth` from config; `auto` → `fast` low, `medium` medium, `full` high.
-
-Reviewer prompt: change folder path, `base:` sha, resolved test command, depth, focus. TDD evidence and deviations come from the `evidence:` / `deviations:` lines in the tasks, not from session reports, so a resumed session reviews the same way.
-
-- **fast, medium** — one `slimspec:reviewer`, focus `all`.
-- **full** — two `slimspec:reviewer` agents in one message: focus `spec` (spec conformance) and focus `code` (code review).
+Launch one `slimspec:reviewer`: change folder, `base:` sha, test command, depth — `review.depth`; `auto` → `fast` low, `medium` medium, `full` high.
 
 ## 2. Triage
 
-You triage; the reviewer's `kind` is a proposal. For each finding:
+The reviewer's `kind` is a proposal; you decide:
 
-- **nit** — collect for the final summary; never triggers a cycle.
-- **blocker / should-fix, implementation** (code misses what `explore.md` / `tasks.md` require, missing or wrong red evidence, files outside `files`, tautological test, bug) — reopen the owning task with `fix: <finding>` (delete its evidence lines); when no task owns it, add `F<n>` tasks in a new wave.
-- **blocker / should-fix, design or intent** (the design is wrong or incomplete, the Goal is unreachable as designed, a deviation changes a decision) — show it to the user and run `refine`.
+- **nit** — reported; never a cycle.
+- **blocker / should-fix, implementation** (code misses explore or tasks, missing or wrong red evidence, files outside `files`, tautological test, bug) — reopen the owning task with `fix: <finding>`; no owner → `F<n>` tasks in a new wave.
+- **blocker / should-fix, design or intent** (design wrong or incomplete, Goal unreachable, a deviation changes a decision) — always to the user, then `refine`.
 
-Show the report (step 3), then:
+Never drop a blocker or should-fix to pass. After the report: implementation findings only and `fix-cycles` < 2 → increment, run apply, verify again; at 2 → ask: one more cycle / refine / stop, with the open findings. No blocker or should-fix → pass: return to the router, or tell the user `/slimspec <slug>` continues with ground.
 
-- Implementation findings only — if `fix-cycles` < 2: increment it, run apply, then verify again. If `fix-cycles` is 2: escalate via `AskUserQuestion` (one more fix cycle / refine / stop here), listing the findings still open.
-- No blocker or should-fix left — verify passes. Return to the router (it runs ground) or, called directly, tell the user `/slimspec <slug>` continues with ground.
+## 3. Report
 
-## 3. Report to the user
+Samples: `${CLAUDE_PLUGIN_ROOT}/skills/verify/examples.md`. A skipped check shows as skipped, never as passed.
 
-Build it from the reviewer YAML (in `full`, merge both reports); the YAML stays in the session. Samples: `${CLAUDE_PLUGIN_ROOT}/skills/verify/examples.md` — read before the first report.
-
-- **Header** — `Verify · <slug> · round <n> ·` the counts per severity, or `pass`.
-- **Summary table** — one row per check: suite, plan conformance, design conformance, TDD evidence, deviations, code review (skill or fallback, depth), skipped (from `skipped`, else `none`).
-- **Findings** grouped Blockers / Should-fix / Nits, then Design / intent. Each: `file:line — issue`, `Fix:` the reviewer's recommendation, `→` its routing (reopen `T<n>`, new `F<n>`, or `refine`). Rewrite any vague recommendation into a concrete change before showing it.
-- **Next** — the fix cycle (`<n>/2`), the refine question, the escalation, or ground.
-
-## Guardrails
-
-- Never fix code in this phase; fixes go through apply.
-- Never drop a blocker or should-fix to pass verify; never start a fix cycle for nits.
-- Design and intent findings always reach the user; never resolve them yourself.
-- A skipped check is reported as skipped, never as passed.
+- **No findings** — one line: `Verify · <slug> · round <n> · pass · suite <result>` (+ `· skipped: <checks>`) `→ ground`.
+- **Findings** — header `Verify · <slug> · round <n> ·` counts per severity (`pass` if only nits); a table, one row per check: suite, plan, design, TDD evidence, deviations, code review (skill or fallback, depth), skipped; findings grouped Blockers / Should-fix / Nits / Design-intent, each `file:line — issue`, `Fix:` a concrete change, `→` routing (reopen `T<n>`, new `F<n>`, `refine`); `Next:` fix cycle `<n>/2`, refine, escalation or ground.

@@ -1,6 +1,6 @@
 ---
 name: full
-description: "Start a slimspec change in full mode: medium plus explicit gates, two reviewers at high depth, separate intent check."
+description: "Start a slimspec change in full mode: medium plus explicit gates and high-depth review."
 argument-hint: "<idea>"
 disable-model-invocation: true
 ---

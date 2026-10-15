@@ -2,22 +2,17 @@
 
 Running project: a TypeScript monorepo (`packages/auth`, `packages/api`, `packages/db`) behind an API gateway. The change that comes out of these sessions is `login-lockout`; its finished `explore.md` is in `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/examples.md`.
 
-Each sample shows what the main session writes after the scan, then the `AskUserQuestion` call that follows. Free text explains and draws; the decision itself is always the question.
+Each sample shows what the main session writes after the scan, then the `AskUserQuestion` call that follows. Free text explains; the decision itself is always the question. Diagrams and previews appear only where options differ in structure.
 
 ## Vague idea
 
 > /slimspec "we should do something about brute-force logins"
 
-```
 Login protection, cheapest to strongest:
-
-  gateway per-IP limit    per-account lockout     CAPTCHA after N        2FA
-  (exists: gateway/       (new: counter +         (new: provider,        (new: enrolment,
-   config.yaml:14)         429 on login)           frontend change)       recovery flow)
-        │                        │                       │                     │
-     done today              1 package +             3 packages +          weeks
-                             1 route                 vendor
-```
+- gateway per-IP limit — exists (`gateway/config.yaml:14`);
+- per-account lockout — counter + 429 on login; 1 package + 1 route;
+- CAPTCHA after N failures — provider + frontend; 3 packages + vendor;
+- 2FA — enrolment and recovery flow; weeks.
 
 The gateway already limits per IP, so the open question is what to add on top. I would start with per-account lockout: it covers what per-IP misses and stays inside `packages/auth` and one route.
 
@@ -39,16 +34,7 @@ Do not ask about counters, windows or status codes yet — they belong to a bran
 
 > /slimspec "monitoring shows 2k failed logins per minute on admin@; the gateway limit should catch this, why doesn't it?"
 
-Read the code first, draw what is there, and check the user's diagnosis against it:
-
-```
-client ──▶ gateway ──▶ POST /login ──▶ login() ──▶ bcrypt compare ──▶ 401 / tokens
-           │ limit: 20/min per IP                    │
-           │ (gateway/config.yaml:14)                └ no per-account state anywhere
-           ▼                                           (packages/auth/src/login.ts:22-41)
-```
-
-The gateway limit is per IP. 2k/min from one IP would be cut at 20, so the traffic comes from many IPs — no per-IP setting will stop it. The missing piece is per-account state in `login()`.
+Read the code first and check the user's diagnosis against it: the gateway limits 20/min per IP (`gateway/config.yaml:14`), and `login()` keeps no per-account state (`packages/auth/src/login.ts:22-41`). 2k/min from one IP would be cut at 20, so the traffic comes from many IPs — no per-IP setting will stop it. The missing piece is per-account state in `login()`.
 
 Then the first question is the one this finding opens: lock per account or per account + IP.
 
@@ -58,15 +44,7 @@ Then the first question is the one this finding opens: lock per account or per a
 
 The change already has `explore.md` and `tasks.md`: skip the scan, read both, the open task and the code around it.
 
-```
-t=0          t=2m                  t=32m
- │ login ok   │ 10th failure → lock │ lock expires
- ├────────────┼─────────────────────┤
- │ access token (15 min TTL) ──▶ expires at t=15m
- │ refresh token (30 days) ─────────────────────────▶ refresh → 429 while locked (F1)
-```
-
-The existing access token outlives the lock start by up to 15 minutes; refresh is already blocked by F1. Goal says "issue no tokens" — it does not say "revoke existing ones". That gap is a decision:
+An access token issued before the lock lives up to 15 more minutes (15 min TTL); refresh is already blocked by F1. Goal says "issue no tokens" — it does not say "revoke existing ones". That gap is a decision:
 
 ```yaml
 question: "Should a lock end sessions that already exist?"

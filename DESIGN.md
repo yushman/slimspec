@@ -22,7 +22,7 @@ Success looks like:
 
 - Support for agents other than Claude Code.
 - A CLI, daemon, hooks or runtime scripts (the one optional setup script, D20, is never invoked by the framework).
-- Persistent change history inside the repo (git is the history).
+- Persistent change history inside the repo (commits and grounded specs are the history).
 - Up-front spec generation for a whole project.
 
 ## Flow
@@ -38,8 +38,8 @@ explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ─�
 | explore| inline, ≤3 questions, merged with plan | scanner + grilling     | same + explicit gate on explore.md         |
 | plan   | section inside explore.md      | planner agent, waves          | same + gate                                |
 | apply  | one implementer, TDD           | parallel waves                | same                                       |
-| verify | reviewer, review depth `low`   | reviewer, review depth `medium` | two reviewers (spec conformance, code review), depth `high` |
-| ground | update touched specs           | distill + intent check        | same + separate intent-check agent         |
+| verify | reviewer, review depth `low`   | reviewer, review depth `medium` | reviewer, review depth `high`            |
+| ground | update touched specs           | distill + intent check        | same                                       |
 
 Medium gates: after explore and after plan. Apply → verify → ground then run without
 stopping, except for escalations. `fast` has one combined gate on design and tasks. `full` adds
@@ -55,7 +55,10 @@ an explicit gate on the written `explore.md` and shows the whole `tasks.md` at t
 ### D2. The main session is the single source of context
 - **Context:** the user steers decisions; subagents start cold.
 - **Choice:** the main session runs grilling, writes `explore.md`, triages verify findings
-  and keeps every subagent result. Subagents only execute and report.
+  and keeps every subagent result. Subagents only execute and report. The change files are the
+  persisted snapshot of the main session's context (resume, gates) and the handoff medium: prompts
+  carry paths and task ids, never inlined artifact content; whatever an agent needs from the
+  conversation is written to the files first, and a prompt adds only what is not yet there.
 - **Rejected:** a subagent that owns explore — cleaner context, but grilling splits into
   rounds and the main session loses the reasoning.
 
@@ -107,7 +110,9 @@ justifies each wave. Parallelism uses disjoint files in the same working tree in
 
 ### D8. TDD is enforced by evidence, not tooling
 Each task names its first failing test. The implementer must report a red run before
-implementation and a green run after. Apply persists that evidence (and any deviations) as
+implementation and a green run after, running only the task's own tests. The main session runs the
+full suite once after each wave (red → FAILED handling, culprit task named from the wave's reports);
+the reviewer reruns it once in verify. Apply persists that evidence (and any deviations) as
 one-line entries under the task in `tasks.md`, so verify works the same after a resume. Verify
 rejects done tasks without red evidence. Tasks
 where TDD does not apply (config, styles, migrations, docs) carry
@@ -140,14 +145,17 @@ affected tasks `invalidated`, and sends only those back to apply. Approval reset
 2. Merge into the module spec with the model, not by keywords: contradicting statements are
    rewritten, not appended.
 3. Check that the updated specs cover the Goal and agree with the Decisions.
-4. Delete `.slimspec/changes/<slug>/`; git keeps the history.
+4. Delete `.slimspec/changes/<slug>/`. It never reached git (D13): the history is the commits and
+   the grounded specs.
 
 Scope: only modules touched by the diff. The root `CLAUDE.md` is updated only for
 cross-module decisions. Missing module specs are created lazily here — there is no init step.
 
 ### D13. Several active changes, one folder per slug
-`.slimspec/changes/<slug>/` holds `explore.md` and `tasks.md`. `/slimspec` without
-arguments lists active changes and asks which one to resume.
+`.slimspec/changes/<slug>/` holds `explore.md` and `tasks.md`. These are temporary: explore adds
+`.slimspec/changes/` to `.gitignore` when it creates the first folder (`.slimspec/config.yaml` stays
+tracked), so commits under `commit: task | wave` never include change artifacts. `/slimspec` without
+arguments lists active changes to resume or abandon (delete the folder after confirmation, no ground).
 
 ### D14. Git behavior is configurable
 `commit: none | task | wave`, default `none`. The main session commits, never the agents; ground
@@ -223,7 +231,7 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
     show is asked about: drop / write as stated) → summary.
   - Cleanup after confirmation: a separate final step lists everything to delete (source specs,
     changes, plans, tooling, workflow lines in `CLAUDE.md`) and deletes only what the user approves.
-    History stays in git (as in D12). The Superpowers plugin is uninstalled by the user.
+    History stays in git. The Superpowers plugin is uninstalled by the user.
 - **Rejected:** converting active changes and plans into `.slimspec/changes/` — needs new grammar,
   evidence markers and reviewer exceptions for work slimspec did not plan; switching to `central`
   specs to mirror OpenSpec's per-capability files — splits specs from code, against D11; extending

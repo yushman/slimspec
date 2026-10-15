@@ -27,7 +27,7 @@ claude --plugin-dir ~/src/slimspec
 
 ```
 /slimspec <идея>          # полный цикл; режим из конфига, предлагается после скана
-/slimspec                 # список активных изменений и продолжение одного из них
+/slimspec                 # список активных изменений: продолжить или отменить одно
 /slimspec:fast <идея>     # старт в фиксированном режиме, без предложения режима
 /slimspec:medium <идея>
 /slimspec:full <идея>
@@ -35,7 +35,8 @@ claude --plugin-dir ~/src/slimspec
 
 Команды фаз, каждую можно вызвать отдельно: `/slimspec:explore`, `/slimspec:plan`, `/slimspec:apply`,
 `/slimspec:verify`, `/slimspec:refine`, `/slimspec:ground`. `/slimspec <slug>` продолжает изменение
-по его файлам в `.slimspec/changes/<slug>/`.
+по его файлам в `.slimspec/changes/<slug>/`. Папки изменений временные: slimspec добавляет
+`.slimspec/changes/` в `.gitignore` и удаляет папку после ground.
 
 Остановок две: после explore (дизайн) и после plan. Дальше apply → verify → ground идут сами;
 вопросы будут только от агентов, по дизайн-замечаниям verify или после двух автоматических
@@ -48,10 +49,11 @@ claude --plugin-dir ~/src/slimspec
 | explore | inline, ≤3 вопросов, вместе с plan         | scanner + grilling             | то же + явный гейт на `explore.md`            |
 | plan    | секция внутри `explore.md`                 | агент planner, волны           | то же + полный `tasks.md` на гейте            |
 | apply   | один implementer, TDD                      | параллельные волны             | то же                                         |
-| verify  | reviewer, глубина `low`                    | reviewer, глубина `medium`     | два ревьюера (спека, код), глубина `high`     |
-| ground  | обновить затронутые спеки                  | дистилляция + проверка намерения | то же + отдельный агент проверки намерения  |
+| verify  | reviewer, глубина `low`                    | reviewer, глубина `medium`     | reviewer, глубина `high`                      |
+| ground  | обновить затронутые спеки                  | дистилляция + проверка намерения | то же                                       |
 
-TDD во всех режимах проверяется по свидетельствам red/green; TDD-хука нет.
+TDD во всех режимах проверяется по свидетельствам red/green; TDD-хука нет. Implementer гоняет только
+тесты своей задачи; полный набор тестов запускается один раз после каждой волны и ещё раз в verify.
 
 ## Миграция
 
