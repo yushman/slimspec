@@ -4,9 +4,11 @@ Website: https://yushman.github.io/slimspec/
 
 [Русская версия](README.ru.md)
 
-## Spec-driven development plugin for Claude Code
+## Strong models don't need heavy specs.
 
-slimspec is a Claude Code plugin. It runs the explore → plan → apply → verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested `CLAUDE.md`, which Claude Code loads automatically. The spec records where to look and what must not break; the model reads the code for everything else.
+An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.
+
+slimspec is a Claude Code plugin built on that. It runs the explore → plan → apply → verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested `CLAUDE.md`, which Claude Code loads automatically: where to look and what must not break, nothing else.
 
 ## Install
 
@@ -26,7 +28,9 @@ git clone https://github.com/yushman/slimspec ~/src/slimspec
 claude --plugin-dir ~/src/slimspec
 ```
 
-## A real migration
+## Measured on a real project
+
+### Migration
 
 One existing project, a Rust + web log viewer, was moved from OpenSpec with `/slimspec:migrate-openspec`. Before and after:
 
@@ -49,7 +53,26 @@ One existing project, a Rust + web log viewer, was moved from OpenSpec with `/sl
 - Per-change rationale is gone. Part of it lives on in ADRs; the rest is only in git history.
 - The largest module spec (~14 KB) is loaded whole for any work in that module.
 
-The numbers come from one project; no benchmark was run. Results depend on how the source specs were written.
+Four slimspec changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced.
+
+### Cost per change
+
+The same project, before and after the migration, measured from Claude Code transcripts. Tokens are all input the model processed (input + cache read + cache write), main session and subagents together. The closest pair in size:
+
+|                                  | OpenSpec (`logcat-padded-tags`) | slimspec full (`iana-tz-hash`) |
+|----------------------------------|---------------------------------|--------------------------------|
+| Code changed                     | 409 lines, 4 files, one module  | 435 lines, 15 files, three modules |
+| Tokens processed                 | 45.7M                           | **29.7M (−35%)**               |
+| Tokens per changed code line     | ~110k                           | **~68k (−38%)**                |
+| Review                           | none                            | **2 verify rounds at depth high; one real blocker (panic on extreme dates) fixed inside the change** |
+| Process files committed          | ~530 lines (proposal, design, tasks, delta specs, devlog) | **0** (change folder deleted; spec updates live in the module `CLAUDE.md` files) |
+| Wall-clock span, gates included  | 91 min                          | 56 min                         |
+
+The slimspec run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs.
+
+Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two slimspec changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a slimspec subagent 0–1M, because each gets one narrow lane.
+
+Caveats: n = 1–2 per flow, one project. The small slimspec changes were 5–10× smaller in code, so part of that gap is size. Some slimspec agents ran on Sonnet or Haiku. The slimspec full run's main session carried earlier unrelated context, which inflates its count.
 
 ## The flow
 
@@ -101,15 +124,17 @@ Each phase is also a command of its own: `/slimspec:explore`, `/slimspec:plan`, 
 
 ## Compared with OpenSpec and Superpowers
 
-slimspec reuses parts of both. The table lists only the points where slimspec differs.
+slimspec reuses parts of both. The table lists only the points where slimspec differs; the bold part of each slimspec cell is what it does better.
 
 |                       | OpenSpec | Superpowers | slimspec |
 |-----------------------|----------|-------------|----------|
-| Flow                  | explore → propose → apply → verify → archive, a command per step; explore and verify are optional | brainstorming → worktree → plan → execute → finish branch; skills trigger on their own | one command runs explore → ground; you stop at two gates |
-| Artifacts per change  | proposal, design, tasks, delta specs; the folder then moves to an archive in the repo | for a project: a dated design doc in `docs/superpowers/specs/` (committed) and a plan in `docs/superpowers/plans/`; small changes stay in chat | `explore.md` + `tasks.md`, gitignored, deleted after ground |
-| Spec merge            | ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive | no merge into a living spec; one design doc per project | the model merges into the module spec, rewrites contradictions, checks intent |
-| Subagents             | no built-in subagent mechanism | a fresh subagent per task with a review after each, or inline execution | scanner, planner, implementers, reviewer, grounder; structured reports, questions bubble up |
-| Explore               | `/opsx:explore`, an optional thinking partner before a proposal | brainstorming; once a project's design is approved, the next step is a plan | grilling: one decision per question, independent ones together; plan starts only after your gate |
+| Flow                  | explore → propose → apply → verify → archive, a command per step; explore and verify are optional | brainstorming → worktree → plan → execute → finish branch; skills trigger on their own | **One command, two stops.** It runs explore → ground; you stop at two gates; verify is never skipped |
+| Explore               | `/opsx:explore`, an optional thinking partner before a proposal | brainstorming; once a project's design is approved, the next step is a plan | **Explore is the spec of the change.** Grilling, one decision per question, writes `explore.md` (goal, non-goals, decisions, risks); no separate proposal or design |
+| Artifacts per change  | proposal, design, tasks, delta specs; the folder then moves to an archive in the repo | for a project: a dated design doc in `docs/superpowers/specs/` (committed) and a plan in `docs/superpowers/plans/`; small changes stay in chat | **Nothing to commit but code and spec edits.** `explore.md` + `tasks.md`, gitignored, deleted after ground |
+| Living spec           | one file per capability under `openspec/specs/`, read when you point the agent at it | none; one design doc per project | **Loaded on its own, only where you work.** One spec per module as a nested `CLAUDE.md` |
+| Spec merge            | ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive | no merge into a living spec | **Merged by meaning.** The model rewrites contradictions and checks the result against the change's intent |
+| Subagents             | no built-in subagent mechanism | a fresh subagent per task with a review after each, or inline execution | **Narrow agents, cheap context.** Scanner, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you |
+| Measured cost         | 45.7M tokens for a ~400-line change | not measured | **29.7M tokens for a comparable change, with two review rounds** |
 
 **What slimspec does not have.** OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. slimspec works only with Claude Code and covers only the spec-driven loop.
 

@@ -8,7 +8,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yushman.github.io/slimspec/ru/">
 <meta property="og:title" content="slimspec — лёгкие спеки для Claude Code">
-<meta property="og:description" content="slimspec — плагин для Claude Code: цикл explore → plan → apply → verify с red-green TDD, два временных файла на изменение и одна компактная спека на модуль.">
+<meta property="og:description" content="Сильным моделям не нужны тяжёлые спеки. Агент сам восстанавливает картину, быстро пробежав по коду. Спеке остаётся подсказать ему, что делать и где искать. А explore уже и есть спека изменения.">
 <link rel="alternate" hreflang="en" href="https://yushman.github.io/slimspec/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
@@ -78,6 +78,8 @@ th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom
 tr:last-child td { border-bottom: 0; }
 thead th { background: var(--surface); font-weight: 600; white-space: nowrap; }
 td.num, th.num { white-space: nowrap; }
+td.win { background: var(--accent-soft); }
+td.win strong { color: var(--accent); }
 .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
 .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
 .diagram { margin: 8px 0 20px; }
@@ -121,8 +123,9 @@ footer a { margin-right: 16px; }
 
 <main>
 
-<h1>Плагин для spec-driven разработки в Claude Code</h1>
-<p class="lead">slimspec — плагин для Claude Code. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически. Спека фиксирует, где искать и что нельзя сломать; остальное модель берёт из кода.</p>
+<h1>Сильным моделям не нужны тяжёлые спеки.</h1>
+<p class="lead">Агент сам восстанавливает картину, быстро пробежав по коду. Спеке остаётся подсказать ему, что делать и где искать. А explore уже и есть спека изменения.</p>
+<p>slimspec — плагин для Claude Code, построенный на этой идее. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически: где искать и что нельзя сломать, и ничего больше.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -132,9 +135,9 @@ footer a { margin-right: 16px; }
   <span class="note">Дальше: <code>/slimspec &lt;идея&gt;</code></span>
 </div>
 
-<h2 id="result">Миграция реального проекта</h2>
+<h2 id="result">Замеры на реальном проекте</h2>
+<h3>Миграция</h3>
 <p>Один существующий проект, просмотрщик логов на Rust с веб-интерфейсом, перевели с OpenSpec командой <code>/slimspec:migrate-openspec</code>. До и после:</p>
-
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>slimspec</th></tr></thead>
@@ -146,14 +149,12 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-
 <h3>Откуда разница</h3>
 <ul>
   <li>Сценарии WHEN/THEN влились в требования, которые они и описывали. Пустые разделы Purpose и шаблонные SHALL ушли.</li>
   <li>Одна спека на модуль вместо 23 на фичи. Агент читает только спеку модуля, в котором работает: правка в <code>web/</code> подтягивает ~11&nbsp;КБ, а не россыпь capability-файлов по всему дереву.</li>
   <li>Архива изменений в рабочем дереве больше нет. В git-истории того проекта он остался.</li>
 </ul>
-
 <h3>Что потеряно</h3>
 <div class="callout">
 <ul>
@@ -162,7 +163,25 @@ footer a { margin-right: 16px; }
   <li>Самая большая спека модуля (~14&nbsp;КБ) грузится целиком при любой работе в этом модуле.</li>
 </ul>
 </div>
-<p class="note">Цифры получены на одном проекте, бенчмарк не проводился. Результат зависит от того, как были написаны исходные спеки.</p>
+<p>Спустя четыре изменения на slimspec спеки модулей — 4 файла и 641 строка, всё ещё на 78% меньше спек OpenSpec, которые они заменили.</p>
+<h3>Стоимость изменения</h3>
+<p>Тот же проект до и после миграции, замер по транскриптам Claude Code. Токены — весь вход, который обработала модель (input + чтение кэша + запись в кэш), основная сессия и субагенты вместе. Самая близкая по размеру пара:</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th>slimspec full (<code>iana-tz-hash</code>)</th></tr></thead>
+  <tbody>
+    <tr><td>Изменено кода</td><td>409 строк, 4 файла, один модуль</td><td>435 строк, 15 файлов, три модуля</td></tr>
+    <tr><td>Обработано токенов</td><td>45,7M</td><td class="win"><strong>29,7M (−35%)</strong></td></tr>
+    <tr><td>Токенов на строку кода</td><td>~110k</td><td class="win"><strong>~68k (−38%)</strong></td></tr>
+    <tr><td>Ревью</td><td>нет</td><td class="win"><strong>2 раунда verify на глубине high; один реальный блокер (паника на крайних датах) исправлен внутри изменения</strong></td></tr>
+    <tr><td>Закоммичено процессных файлов</td><td>~530 строк (proposal, design, tasks, дельты спек, devlog)</td><td class="win"><strong>0</strong> (папка изменения удалена; правки спек — в <code>CLAUDE.md</code> модулей)</td></tr>
+    <tr><td>Время от начала до конца, с гейтами</td><td>91 мин</td><td>56 мин</td></tr>
+  </tbody>
+</table>
+</div>
+<p>При этом slimspec сделал больше: 5 вопросов по решениям и 3 гейта, 9 задач в 3 волнах, ground в 4 спеки, ADR и оба README.</p>
+<p>Мелкие изменения показывают то же. Два изменения на OpenSpec обработали 31,5M и 45,7M токенов; два на slimspec (fast и medium) — 6,8M и 12,5M. Один implementer в OpenSpec в одиночку обрабатывал 13–16M токенов, субагент slimspec — 0–1M, потому что каждому достаётся одна узкая дорожка.</p>
+<p class="note">Оговорки: n = 1–2 на подход, один проект. Мелкие изменения на slimspec были в 5–10 раз меньше по коду, так что часть разницы — размер. Часть агентов slimspec работала на Sonnet или Haiku. Основная сессия прогона slimspec full несла посторонний контекст из более ранней работы, что завышает её счёт.</p>
 
 <h2 id="flow">Как идёт работа</h2>
 
@@ -236,16 +255,18 @@ footer a { margin-right: 16px; }
 <p class="note">Каждую фазу можно вызвать и отдельно: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">OpenSpec, Superpowers и slimspec</h2>
-<p>slimspec использует части обоих инструментов. В таблице перечислено только то, в чём slimspec отличается.</p>
+<p>slimspec использует части обоих инструментов. В таблице перечислено только то, в чём slimspec отличается; жирным в колонке slimspec выделено, в чём он лучше.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th>slimspec</th></tr></thead>
   <tbody>
-    <tr><td>Цикл</td><td>explore → propose → apply → verify → archive, на каждый шаг своя команда; explore и verify необязательны</td><td>brainstorming → worktree → plan → execute → завершение ветки; скиллы срабатывают сами</td><td>одна команда ведёт от explore до ground, остановки на двух гейтах</td></tr>
-    <tr><td>Артефакты изменения</td><td>proposal, design, tasks, дельты спек; потом папка уезжает в архив в репозитории</td><td>для проекта: дизайн-документ с датой в <code>docs/superpowers/specs/</code> (коммитится) и план в <code>docs/superpowers/plans/</code>; мелкие правки согласуются в чате</td><td><code>explore.md</code> + <code>tasks.md</code>, в <code>.gitignore</code>, удаляются после ground</td></tr>
-    <tr><td>Слияние спек</td><td>секции ADDED / MODIFIED / REMOVED применяются к основной спеке по требованиям при архивации</td><td>в живую спеку ничего не сливается; на проект один дизайн-документ</td><td>модель вливает знания в спеку модуля, переписывает противоречия, сверяет с намерением</td></tr>
-    <tr><td>Субагенты</td><td>встроенного механизма нет</td><td>свежий субагент на каждую задачу и ревью после неё, либо выполнение в той же сессии</td><td>scanner, planner, implementer, reviewer, grounder; структурные отчёты, вопросы поднимаются в основную сессию</td></tr>
-    <tr><td>Explore</td><td><code>/opsx:explore</code>, необязательный собеседник «подумать» перед proposal</td><td>brainstorming; когда дизайн проекта одобрен, следующим шагом идёт план</td><td>вопросы: одно решение на вопрос, независимые вместе; план только после вашего гейта</td></tr>
+    <tr><td>Цикл</td><td>explore&nbsp;→ propose&nbsp;→ apply&nbsp;→ verify&nbsp;→ archive, на каждый шаг своя команда; explore и verify необязательны</td><td>brainstorming&nbsp;→ worktree&nbsp;→ plan&nbsp;→ execute&nbsp;→ завершение ветки; скиллы срабатывают сами</td><td class="win"><strong>Одна команда, две остановки.</strong> Ведёт от explore до ground, вы останавливаетесь на двух гейтах; verify не пропускается</td></tr>
+    <tr><td>Explore</td><td><code>/opsx:explore</code>, необязательный собеседник «подумать» перед proposal</td><td>brainstorming; когда дизайн проекта одобрен, следующим шагом идёт план</td><td class="win"><strong>Explore — это и есть спека изменения.</strong> Вопросы по одному решению записываются в <code>explore.md</code> (цель, не-цели, решения, риски); отдельных proposal и design нет</td></tr>
+    <tr><td>Артефакты изменения</td><td>proposal, design, tasks, дельты спек; потом папка уезжает в архив в репозитории</td><td>для проекта: дизайн-документ с датой в <code>docs/superpowers/specs/</code> (коммитится) и план в <code>docs/superpowers/plans/</code>; мелкие правки согласуются в чате</td><td class="win"><strong>В коммит идут только код и правки спек.</strong> <code>explore.md</code> + <code>tasks.md</code>, в <code>.gitignore</code>, удаляются после ground</td></tr>
+    <tr><td>Живая спека</td><td>файл на capability в <code>openspec/specs/</code>, агент читает, когда вы на него укажете</td><td>нет; на проект один дизайн-документ</td><td class="win"><strong>Грузится сама и только там, где вы работаете.</strong> Одна спека на модуль во вложенном <code>CLAUDE.md</code></td></tr>
+    <tr><td>Слияние спек</td><td>секции ADDED / MODIFIED / REMOVED применяются к основной спеке по требованиям при архивации</td><td>в живую спеку ничего не сливается</td><td class="win"><strong>Слияние по смыслу.</strong> Модель переписывает противоречия и сверяет результат с намерением изменения</td></tr>
+    <tr><td>Субагенты</td><td>встроенного механизма нет</td><td>свежий субагент на каждую задачу и ревью после неё, либо выполнение в той же сессии</td><td class="win"><strong>Узкие агенты, дешёвый контекст.</strong> Scanner, planner, параллельные implementer по дорожкам, reviewer, grounder, у каждого своя модель; вопросы поднимаются к вам</td></tr>
+    <tr><td>Замеренная стоимость</td><td>45,7M токенов на изменение ~400 строк</td><td>не замерялась</td><td class="win"><strong>29,7M токенов на сопоставимое изменение, с двумя раундами ревью</strong></td></tr>
   </tbody>
 </table>
 </div>

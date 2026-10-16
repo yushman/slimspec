@@ -8,7 +8,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yushman.github.io/slimspec/">
 <meta property="og:title" content="slimspec — lightweight specs for Claude Code">
-<meta property="og:description" content="slimspec is a Claude Code plugin: the explore → plan → apply → verify loop with red-green TDD, two temporary files per change and one compact spec per module.">
+<meta property="og:description" content="Strong models don't need heavy specs. An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.">
 <link rel="alternate" hreflang="ru" href="https://yushman.github.io/slimspec/ru/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
@@ -78,6 +78,8 @@ th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom
 tr:last-child td { border-bottom: 0; }
 thead th { background: var(--surface); font-weight: 600; white-space: nowrap; }
 td.num, th.num { white-space: nowrap; }
+td.win { background: var(--accent-soft); }
+td.win strong { color: var(--accent); }
 .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
 .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
 .diagram { margin: 8px 0 20px; }
@@ -121,8 +123,9 @@ footer a { margin-right: 16px; }
 
 <main>
 
-<h1>Spec-driven development plugin for Claude Code</h1>
-<p class="lead">slimspec is a Claude Code plugin. It runs the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested <code>CLAUDE.md</code>, which Claude Code loads automatically. The spec records where to look and what must not break; the model reads the code for everything else.</p>
+<h1>Strong models don't need heavy specs.</h1>
+<p class="lead">An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.</p>
+<p>slimspec is a Claude Code plugin built on that. It runs the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested <code>CLAUDE.md</code>, which Claude Code loads automatically: where to look and what must not break, nothing else.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -132,9 +135,9 @@ footer a { margin-right: 16px; }
   <span class="note">Then: <code>/slimspec &lt;idea&gt;</code></span>
 </div>
 
-<h2 id="result">A real migration</h2>
+<h2 id="result">Measured on a real project</h2>
+<h3>Migration</h3>
 <p>One existing project, a Rust + web log viewer, was moved from OpenSpec with <code>/slimspec:migrate-openspec</code>. Before and after:</p>
-
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>slimspec</th></tr></thead>
@@ -146,14 +149,12 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-
 <h3>Where the size went</h3>
 <ul>
   <li>WHEN/THEN scenarios were folded into the requirements they describe. Empty Purpose sections and SHALL boilerplate are gone.</li>
   <li>One spec per module instead of 23 per feature. The agent reads only the spec of the module it works in: an edit in <code>web/</code> pulls ~11&nbsp;KB, not a set of capability files scattered across the tree.</li>
   <li>The change archive is out of the working tree. It is still in that project's git history.</li>
 </ul>
-
 <h3>What was lost</h3>
 <div class="callout">
 <ul>
@@ -162,7 +163,25 @@ footer a { margin-right: 16px; }
   <li>The largest module spec (~14&nbsp;KB) is loaded whole for any work in that module.</li>
 </ul>
 </div>
-<p class="note">The numbers come from one project; no benchmark was run. Results depend on how the source specs were written.</p>
+<p>Four slimspec changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced.</p>
+<h3>Cost per change</h3>
+<p>The same project, before and after the migration, measured from Claude Code transcripts. Tokens are all input the model processed (input + cache read + cache write), main session and subagents together. The closest pair in size:</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th>slimspec full (<code>iana-tz-hash</code>)</th></tr></thead>
+  <tbody>
+    <tr><td>Code changed</td><td>409 lines, 4 files, one module</td><td>435 lines, 15 files, three modules</td></tr>
+    <tr><td>Tokens processed</td><td>45.7M</td><td class="win"><strong>29.7M (−35%)</strong></td></tr>
+    <tr><td>Tokens per changed code line</td><td>~110k</td><td class="win"><strong>~68k (−38%)</strong></td></tr>
+    <tr><td>Review</td><td>none</td><td class="win"><strong>2 verify rounds at depth high; one real blocker (panic on extreme dates) fixed inside the change</strong></td></tr>
+    <tr><td>Process files committed</td><td>~530 lines (proposal, design, tasks, delta specs, devlog)</td><td class="win"><strong>0</strong> (change folder deleted; spec updates live in the module <code>CLAUDE.md</code> files)</td></tr>
+    <tr><td>Wall-clock span, gates included</td><td>91 min</td><td>56 min</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The slimspec run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs.</p>
+<p>Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two slimspec changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a slimspec subagent 0–1M, because each gets one narrow lane.</p>
+<p class="note">Caveats: n = 1–2 per flow, one project. The small slimspec changes were 5–10× smaller in code, so part of that gap is size. Some slimspec agents ran on Sonnet or Haiku. The slimspec full run's main session carried earlier unrelated context, which inflates its count.</p>
 
 <h2 id="flow">The flow</h2>
 
@@ -236,16 +255,18 @@ footer a { margin-right: 16px; }
 <p class="note">Each phase is also a command of its own: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">Compared with OpenSpec and Superpowers</h2>
-<p>slimspec reuses parts of both. The table lists only the points where slimspec differs.</p>
+<p>slimspec reuses parts of both. The table lists only the points where slimspec differs; the bold part of each slimspec cell is what it does better.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th>slimspec</th></tr></thead>
   <tbody>
-    <tr><td>Flow</td><td>explore → propose → apply → verify → archive, a command per step; explore and verify are optional</td><td>brainstorming → worktree → plan → execute → finish branch; skills trigger on their own</td><td>one command runs explore → ground; you stop at two gates</td></tr>
-    <tr><td>Artifacts per change</td><td>proposal, design, tasks, delta specs; the folder then moves to an archive in the repo</td><td>for a project: a dated design doc in <code>docs/superpowers/specs/</code> (committed) and a plan in <code>docs/superpowers/plans/</code>; small changes stay in chat</td><td><code>explore.md</code> + <code>tasks.md</code>, gitignored, deleted after ground</td></tr>
-    <tr><td>Spec merge</td><td>ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive</td><td>no merge into a living spec; one design doc per project</td><td>the model merges into the module spec, rewrites contradictions, checks intent</td></tr>
-    <tr><td>Subagents</td><td>no built-in subagent mechanism</td><td>a fresh subagent per task with a review after each, or inline execution</td><td>scanner, planner, implementers, reviewer, grounder; structured reports, questions bubble up</td></tr>
-    <tr><td>Explore</td><td><code>/opsx:explore</code>, an optional thinking partner before a proposal</td><td>brainstorming; once a project's design is approved, the next step is a plan</td><td>grilling: one decision per question, independent ones together; plan starts only after your gate</td></tr>
+    <tr><td>Flow</td><td>explore&nbsp;→ propose&nbsp;→ apply&nbsp;→ verify&nbsp;→ archive, a command per step; explore and verify are optional</td><td>brainstorming&nbsp;→ worktree&nbsp;→ plan&nbsp;→ execute&nbsp;→ finish branch; skills trigger on their own</td><td class="win"><strong>One command, two stops.</strong> It runs explore&nbsp;→ ground; you stop at two gates; verify is never skipped</td></tr>
+    <tr><td>Explore</td><td><code>/opsx:explore</code>, an optional thinking partner before a proposal</td><td>brainstorming; once a project's design is approved, the next step is a plan</td><td class="win"><strong>Explore is the spec of the change.</strong> Grilling, one decision per question, writes <code>explore.md</code> (goal, non-goals, decisions, risks); no separate proposal or design</td></tr>
+    <tr><td>Artifacts per change</td><td>proposal, design, tasks, delta specs; the folder then moves to an archive in the repo</td><td>for a project: a dated design doc in <code>docs/superpowers/specs/</code> (committed) and a plan in <code>docs/superpowers/plans/</code>; small changes stay in chat</td><td class="win"><strong>Nothing to commit but code and spec edits.</strong> <code>explore.md</code> + <code>tasks.md</code>, gitignored, deleted after ground</td></tr>
+    <tr><td>Living spec</td><td>one file per capability under <code>openspec/specs/</code>, read when you point the agent at it</td><td>none; one design doc per project</td><td class="win"><strong>Loaded on its own, only where you work.</strong> One spec per module as a nested <code>CLAUDE.md</code></td></tr>
+    <tr><td>Spec merge</td><td>ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive</td><td>no merge into a living spec</td><td class="win"><strong>Merged by meaning.</strong> The model rewrites contradictions and checks the result against the change's intent</td></tr>
+    <tr><td>Subagents</td><td>no built-in subagent mechanism</td><td>a fresh subagent per task with a review after each, or inline execution</td><td class="win"><strong>Narrow agents, cheap context.</strong> Scanner, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you</td></tr>
+    <tr><td>Measured cost</td><td>45.7M tokens for a ~400-line change</td><td>not measured</td><td class="win"><strong>29.7M tokens for a comparable change, with two review rounds</strong></td></tr>
   </tbody>
 </table>
 </div>
