@@ -82,23 +82,18 @@ td.win { background: var(--accent-soft); }
 td.win strong { color: var(--accent); }
 .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
 .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
-.diagram { margin: 8px 0 20px; }
-.diagram svg { display: block; width: 100%; height: auto; }
-.diagram .narrow { display: none; max-width: 360px; margin: 0 auto; }
+figure.shot { margin: 8px 0 20px; }
+figure.shot.small img { width: 260px; max-width: 100%; padding: 0; background: none; filter: none; }
+.cta + .note { margin-top: 12px; }
+figure.shot img { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+@media (prefers-color-scheme: dark) {
+  figure.shot img { padding: 6px; filter: brightness(0.92); }
+}
 @media (max-width: 600px) {
   body { font-size: 16px; }
-  .diagram .wide { display: none; }
-  .diagram .narrow { display: block; }
   header.top nav { gap: 14px; }
   pre { font-size: 12.5px; padding: 12px; }
 }
-svg .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
-svg .box.hl { stroke: var(--accent); }
-svg .lbl { fill: var(--text); font: 600 15px var(--mono); }
-svg .edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
-svg .edge.loop { stroke-dasharray: 5 4; }
-svg .tag { fill: var(--accent); font: 12px var(--mono); }
-svg .tip { fill: var(--muted); }
 dl.phases { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 16px; }
 dl.phases dt { font-family: var(--mono); font-weight: 600; }
 dl.phases dd { margin: 0; }
@@ -127,6 +122,7 @@ footer a { margin-right: 16px; }
 <h1>Strong models don't need heavy specs.</h1>
 <p class="lead">An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.</p>
 <p><span class="name">SlimSpec</span> is a Claude Code plugin built on that. It runs the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested <code>CLAUDE.md</code>, which Claude Code loads automatically: where to look and what must not break, nothing else.</p>
+<p>Call it spec-driven development in reverse. The spec doesn't drive the work; the work leaves a spec behind on its way out.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -135,10 +131,26 @@ footer a { margin-right: 16px; }
   <a class="btn" href="https://github.com/yushman/slimspec">View on GitHub</a>
   <span class="note">Then: <code>/slimspec &lt;idea&gt;</code></span>
 </div>
+<p class="note">Inside there are only skills and agent definitions. No scripts, no hooks, no CLI, so there isn't much left to break.</p>
+
+<h2 id="why">Why</h2>
+<p>Spec-driven development made sense when models were weaker. Context was small, there were no subagents, and every new session started like a new hire who skipped onboarding. So you wrote everything down, committed the paper, and the next session read it. OpenSpec and Superpowers came out of that era, and their best idea, design before plan, is still here.</p>
+<p>Then came a change in a project with no SDD framework at all. No proposal, no design, no delta specs, not even a modest <code>tasks.md</code> in the corner. The model read the code, found the places to touch, made the change, and it passed human review by the code owner. Not a single spec involved.</p>
+<p>Compare that with a team project on OpenSpec, where the flow stayed slow even with a corporate subscription and several terminals running different features at once:</p>
+<ul>
+  <li>After the proposal come design, tasks, delta specs and the rest. Nobody really read them. They were still written, committed and archived, like TPS reports with a fresh cover sheet.</li>
+  <li>Any edit to an unarchived change becomes another change. Changed your mind halfway? Please file a new form.</li>
+  <li>Archiving needs a rebase, and then someone has to ask the agent to check the spec merge by hand, because another teammate may have touched the section a MODIFIED block lands in.</li>
+</ul>
+<p>The record for paperwork: removing a feature, an unneeded piece of a screen. A deletion task, the easiest kind there is. Delete the code, delete the tests, close the ticket. The final diff:</p>
+<figure class="shot small"><a href="img/diff-removal.png"><img src="img/diff-removal.png" alt="A pull request diff summary: 99 files changed, 5,218 lines added, 5,495 lines removed, for a task that only deleted a feature" loading="lazy"></a></figure>
+<p>About 5,500 lines went out and almost as many came in. The newcomers were specs: a proposal on why to delete, a design on how to delete, tasks on the order of deletion, and REMOVED deltas on what exactly was deleted. Deleting ~5k lines of code took writing ~5k lines of specs. Kafka would have found it a bit much.</p>
+<p>In <span class="name">SlimSpec</span> the main session already is the design. You talk the change through with the agent, and the design and plan appear right there. Deviations are recorded in the same place, no new change needed; if a follow-up grows, the agent offers to move it out of scope into non-goals. The files exist only in case the session gets lost or compacted. They are a save point, not the game.</p>
+<figure class="shot"><a href="img/en/artifacts.png"><img src="img/en/artifacts.png" alt="Artifacts per change: OpenSpec writes proposal, design, tasks and delta specs and archives them in git; SlimSpec keeps two gitignored files, explore.md and tasks.md, distills them into the module CLAUDE.md and deletes them" loading="lazy"></a></figure>
 
 <h2 id="result">Measured on a real project</h2>
 <h3>Migration</h3>
-<p>One existing project, a Rust + web log viewer, was moved from OpenSpec with <code>/slimspec:migrate-openspec</code>. Before and after:</p>
+<p>One existing project, <a href="https://github.com/yushman/looqlog">looqlog</a>, a Rust + web log viewer, was moved from OpenSpec with <code>/slimspec:migrate-openspec</code>. It had 23 spec files, 23 archived changes, 200 files in <code>openspec/</code> and 733&nbsp;KB of history. Not that the agent needed all of it, but once you get into a serious artifact collection, the tendency is to push it as far as you can. Before and after:</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th><span class="name">SlimSpec</span></th></tr></thead>
@@ -150,21 +162,23 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
+<figure class="shot"><a href="img/en/chart-migration.png"><img src="img/en/chart-migration.png" alt="Bar chart of the looqlog migration: behavior specs 2,941 lines in OpenSpec vs 484 in SlimSpec, change archive 12,394 lines vs 0, files in openspec/ 200 vs 0" loading="lazy"></a></figure>
 <h3>Where the size went</h3>
 <ul>
-  <li>WHEN/THEN scenarios were folded into the requirements they describe. Empty Purpose sections and SHALL boilerplate are gone.</li>
+  <li>WHEN/THEN scenarios were folded into the requirements they describe. Empty Purpose sections and SHALL boilerplate are gone (SHALL, SHALL NOT, SHALL ALWAYS: the specs had started to read like terms of service).</li>
   <li>One spec per module instead of 23 per feature. The agent reads only the spec of the module it works in: an edit in <code>web/</code> pulls ~11&nbsp;KB, not a set of capability files scattered across the tree.</li>
   <li>The change archive is out of the working tree. It is still in that project's git history.</li>
 </ul>
 <h3>What was lost</h3>
+<p>Every diet has side effects:</p>
 <div class="callout">
 <ul>
   <li>Scenarios no longer exist as a list of test cases.</li>
-  <li>Per-change rationale is gone. Part of it lives on in ADRs; the rest is only in git history.</li>
+  <li>Per-change rationale is gone. Part of it lives on in ADRs; the rest is only in git history, for anyone who enjoys <code>git blame</code> as a hobby.</li>
   <li>The largest module spec (~14&nbsp;KB) is loaded whole for any work in that module.</li>
 </ul>
 </div>
-<p>Four <span class="name">SlimSpec</span> changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced.</p>
+<p>Four <span class="name">SlimSpec</span> changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced. Growth now tracks the code, not the ceremony.</p>
 <h3>Cost per change</h3>
 <p>The same project, before and after the migration, measured from Claude Code transcripts. Tokens are all input the model processed (input + cache read + cache write), main session and subagents together. The closest pair in size:</p>
 <div class="table-scroll">
@@ -180,60 +194,42 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p>The <span class="name">SlimSpec</span> run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs.</p>
-<p>Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two <span class="name">SlimSpec</span> changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a <span class="name">SlimSpec</span> subagent 0–1M, because each gets one narrow lane.</p>
-<p class="note">Caveats: n = 1–2 per flow, one project. The small <span class="name">SlimSpec</span> changes were 5–10× smaller in code, so part of that gap is size. Some <span class="name">SlimSpec</span> agents ran on Sonnet or Haiku. The <span class="name">SlimSpec</span> full run's main session carried earlier unrelated context, which inflates its count.</p>
+<figure class="shot"><a href="img/en/chart-tokens.png"><img src="img/en/chart-tokens.png" alt="Bar chart of tokens processed per change: OpenSpec 45.7M vs SlimSpec full 29.7M for the comparable pair (−35%); small changes OpenSpec 31.5M and 45.7M vs SlimSpec fast 6.8M and medium 12.5M; tokens per line of code ~110k vs ~68k" loading="lazy"></a></figure>
+<p>The <span class="name">SlimSpec</span> run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs. The blocker the reviewer caught was a panic on extreme dates, the kind that sits quietly until the calendar does something unusual.</p>
+<p>Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two <span class="name">SlimSpec</span> changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a <span class="name">SlimSpec</span> subagent 0–1M, because each gets one narrow lane and doesn't have to hold the whole repo in its head.</p>
+<p class="note">Caveats, up front: n = 1–2 per flow, one project. The small <span class="name">SlimSpec</span> changes were 5–10× smaller in code, so part of that gap is size. Some <span class="name">SlimSpec</span> agents ran on Sonnet or Haiku. The <span class="name">SlimSpec</span> full run's main session carried earlier unrelated context, which inflates its count. Small sample, big gap: an observation, not a benchmark.</p>
 
 <h2 id="flow">The flow</h2>
 
-<div class="diagram" role="img" aria-label="explore, gate, plan, gate, apply, verify, ground. Verify sends implementation bugs back to apply as fixes and design issues to refine; refine patches explore and sends invalidated tasks back to apply.">
-<svg class="wide" viewBox="0 0 720 200" aria-hidden="true">
-  <defs><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
-  <rect class="box hl" x="10" y="50" width="100" height="44" rx="7"/><text class="lbl" x="60" y="77" text-anchor="middle">explore</text>
-  <rect class="box hl" x="160" y="50" width="100" height="44" rx="7"/><text class="lbl" x="210" y="77" text-anchor="middle">plan</text>
-  <rect class="box" x="310" y="50" width="100" height="44" rx="7"/><text class="lbl" x="360" y="77" text-anchor="middle">apply</text>
-  <rect class="box" x="460" y="50" width="100" height="44" rx="7"/><text class="lbl" x="510" y="77" text-anchor="middle">verify</text>
-  <rect class="box" x="610" y="50" width="100" height="44" rx="7"/><text class="lbl" x="660" y="77" text-anchor="middle">ground</text>
-  <path class="edge" d="M110 72H157" marker-end="url(#aw)"/><text class="tag" x="135" y="64" text-anchor="middle">gate</text>
-  <path class="edge" d="M260 72H307" marker-end="url(#aw)"/><text class="tag" x="285" y="64" text-anchor="middle">gate</text>
-  <path class="edge" d="M410 72H457" marker-end="url(#aw)"/>
-  <path class="edge" d="M560 72H607" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M500 50C500 18 370 18 370 47" marker-end="url(#aw)"/><text class="tag" x="435" y="20" text-anchor="middle">fix</text>
-  <rect class="box" x="185" y="146" width="100" height="40" rx="7"/><text class="lbl" x="235" y="171" text-anchor="middle">refine</text>
-  <path class="edge loop" d="M520 94V166H288" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M185 166H60V97" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M260 146V120H350V97" marker-end="url(#aw)"/>
-</svg>
-<svg class="narrow" viewBox="0 0 340 400" aria-hidden="true">
-  <defs><marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
-  <rect class="box hl" x="40" y="10" width="130" height="40" rx="7"/><text class="lbl" x="105" y="35" text-anchor="middle">explore</text>
-  <rect class="box hl" x="40" y="90" width="130" height="40" rx="7"/><text class="lbl" x="105" y="115" text-anchor="middle">plan</text>
-  <rect class="box" x="40" y="170" width="130" height="40" rx="7"/><text class="lbl" x="105" y="195" text-anchor="middle">apply</text>
-  <rect class="box" x="40" y="250" width="130" height="40" rx="7"/><text class="lbl" x="105" y="275" text-anchor="middle">verify</text>
-  <rect class="box" x="40" y="330" width="130" height="40" rx="7"/><text class="lbl" x="105" y="355" text-anchor="middle">ground</text>
-  <path class="edge" d="M105 50V87" marker-end="url(#an)"/><text class="tag" x="113" y="73">gate</text>
-  <path class="edge" d="M105 130V167" marker-end="url(#an)"/><text class="tag" x="113" y="153">gate</text>
-  <path class="edge" d="M105 210V247" marker-end="url(#an)"/>
-  <path class="edge" d="M105 290V327" marker-end="url(#an)"/>
-  <path class="edge loop" d="M40 270H16V190H37" marker-end="url(#an)"/><text class="tag" x="4" y="234" transform="rotate(-90 10 230)">fix</text>
-  <rect class="box" x="215" y="170" width="110" height="40" rx="7"/><text class="lbl" x="270" y="195" text-anchor="middle">refine</text>
-  <path class="edge loop" d="M170 270H270V213" marker-end="url(#an)"/>
-  <path class="edge loop" d="M270 170V30H173" marker-end="url(#an)"/>
-  <path class="edge loop" d="M215 190H173" marker-end="url(#an)"/>
-</svg>
-</div>
+<figure class="shot"><a href="img/en/flow.png"><img src="img/en/flow.png" alt="The SlimSpec cycle: explore, gate, plan, gate, apply, verify, ground. Verify sends implementation bugs back to apply as fixes and design issues to refine; refine patches explore.md and sends invalidated tasks back to apply" loading="lazy"></a></figure>
+<p><code>refine</code> patches <code>explore.md</code> and sends invalidated tasks back to <code>apply</code>.</p>
 
 <dl class="phases">
-  <dt>explore</dt><dd>A scanner reads module specs, then code, and returns a short brief. The main session asks you questions (one decision per question, independent ones together) and writes <code>explore.md</code>. It never moves on to a plan by itself.</dd>
+  <dt>explore</dt><dd>A scanner reads module specs, then code, and returns a short brief. The main session asks you questions (one decision per question, independent ones together) and writes <code>explore.md</code>. It never moves on to a plan by itself. Expect your own idea to get more pointed questions than you planned for; that's the point.</dd>
   <dt>plan</dt><dd>A planner writes <code>tasks.md</code> in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.</dd>
-  <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave.</dd>
+  <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed.</dd>
   <dt>verify</dt><dd>A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through <code>refine</code>.</dd>
   <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.</dd>
 </dl>
+<figure class="shot"><a href="img/en/waves-lanes.png"><img src="img/en/waves-lanes.png" alt="tasks.md split into waves; each wave is divided into parallel lanes of related tasks that touch disjoint files, and each lane gets one implementer" loading="lazy"></a></figure>
 
-<p>You stop twice: after explore and after plan. Each stop opens with a detailed walkthrough: the design with diagrams after explore, the full plan (waves, lanes, tests per task) after plan. The remaining phases run without stopping and return to you only for agent questions, design findings, or after two automatic fix cycles.</p>
-<p>All decisions are made in the main session. Subagents execute and return a short structured report (status, files, decisions, deviations, red/green evidence). They never ask you directly: an open question comes back as <code>BLOCKED</code>, the main session asks you and relaunches the agent with the answer.</p>
-<p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. The folder is gitignored and removed after ground; the history is your commits and the updated specs.</p>
+<p>You stop twice: after explore and after plan. Each stop opens with a detailed walkthrough: the design with diagrams after explore, the full plan (waves, lanes, tests per task) after plan. The remaining phases run without stopping and return to you only for agent questions, design findings, or after two automatic fix cycles. This is the part where you can go do something else.</p>
+<p>All decisions are made in the main session. Subagents execute and return a short structured report (status, files, decisions, deviations, red/green evidence). They never ask you directly: an open question comes back as <code>BLOCKED</code>, the main session asks you and relaunches the agent with the answer. A report looks like this, with no logs and no diffs:</p>
+<pre><code>status: DONE | BLOCKED | FAILED
+task: T3
+files: [src/auth/token.ts, src/auth/token.test.ts]
+decisions: ["used existing clock abstraction"]
+deviations: ["renamed validate → verifyToken"]
+tdd:
+  red: "token.test.ts: rejects expired token — FAIL (expected 401, got 200)"
+  green: "12 passed"
+questions: []</code></pre>
+<p>The main session's context stays clean of test-log walls, yet it holds every decision and every outcome.</p>
+<figure class="shot"><a href="img/en/main-session.png"><img src="img/en/main-session.png" alt="The main session in the center makes all decisions; scanner, planner, several implementers, reviewer and grounder send it short YAML reports; a BLOCKED question goes through the main session to the user and the answer comes back to the agent" loading="lazy"></a></figure>
+<p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. The folder is gitignored and removed after ground; the history is your commits and the updated specs. It goes quietly: anything worth keeping has already moved into the specs.</p>
+<p>Ground is the one part that still feels like classic SDD. The plan and the process are dropped; nobody will ever need to know which wave T3 was in. What survives is merged by an agent that understands why the change was made. A statement that contradicts the change gets rewritten instead of getting a new neighbour, otherwise the spec slowly becomes a comment thread arguing with itself. Then the agent checks that the updated spec covers the change's goal and doesn't argue with its decisions. The result lands in the module's nested <code>CLAUDE.md</code>, so the next agent that walks into that module finds the spec already waiting.</p>
+<figure class="shot"><a href="img/en/ground.png"><img src="img/en/ground.png" alt="Ground: durable knowledge is distilled from the change, merged by the model into the module CLAUDE.md, checked against the change's intent, and the change folder is deleted" loading="lazy"></a></figure>
+<p>TDD is enforced by red/green evidence, not by a hook. Verify won't accept a task without a red run, and the red has to fail for the right reason: a test that fails on a missing import proves nothing. You shall not pass. Where TDD doesn't apply (config, styles, migrations), a task says <code>test: none — &lt;reason&gt;</code> with an alternative check, and every such exemption is listed at the plan gate, so "tests aren't needed here" can't hide in the middle of the list.</p>
 
 <h2 id="modes">Modes</h2>
 <div class="table-scroll">
@@ -248,6 +244,7 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
+<p><code>fast</code> is for the one-line fix you'd be embarrassed to write a proposal for. <code>full</code> is for the change you want a second pair of eyes on. Don't want to choose? <code>/slimspec</code> suggests a mode after the scan.</p>
 <pre><code>/slimspec &lt;idea&gt;          <span class="cmt"># mode from config, suggested after the scan</span>
 /slimspec:fast &lt;idea&gt;     <span class="cmt"># fixed mode, no suggestion</span>
 /slimspec:medium &lt;idea&gt;
@@ -256,7 +253,7 @@ footer a { margin-right: 16px; }
 <p class="note">Each phase is also a command of its own: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">Compared with OpenSpec and Superpowers</h2>
-<p><span class="name">SlimSpec</span> reuses parts of both. The table lists only the points where <span class="name">SlimSpec</span> differs; the bold part of each <span class="name">SlimSpec</span> cell is what it does better.</p>
+<p><span class="name">SlimSpec</span> reuses parts of both: design before plan from both, and a spec merge that keeps only what matters from OpenSpec. The table lists only the points where <span class="name">SlimSpec</span> differs; the bold part of each <span class="name">SlimSpec</span> cell is what it does better.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">SlimSpec</span></th></tr></thead>
@@ -271,20 +268,20 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p><strong>What <span class="name">SlimSpec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. <span class="name">SlimSpec</span> works only with Claude Code and covers only the spec-driven loop.</p>
+<p><strong>What <span class="name">SlimSpec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. <span class="name">SlimSpec</span> works only with Claude Code and covers only the spec-driven loop. It runs one loop and stays in its lane.</p>
 
 <h2 id="migrate">Migrating from OpenSpec or Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → module specs</span>
 /slimspec:migrate-superpowers  <span class="cmt"># Superpowers design docs → module specs</span></code></pre>
 <ul>
   <li>Specs only. Each source spec is mapped onto modules, distilled into your <code>spec.format</code> and checked against the code.</li>
-  <li>You approve a source → spec table first, and decide on every statement the code disagrees with.</li>
+  <li>You approve a source → spec table first, and decide on every statement the code disagrees with. Either side can be wrong, and the tool won't pick a winner for you.</li>
   <li>Changes, plans and tooling are not converted. They are deleted only at a final cleanup step, and only what you confirm. Code is never touched.</li>
   <li>Remove the Superpowers plugin itself with <code>/plugin uninstall</code>.</li>
 </ul>
 
 <h2 id="config">Config</h2>
-<p>Optional. Without a config every key has a default. <code>/slimspec:init</code> asks a few questions in the session and writes <code>.slimspec/config.yaml</code>:</p>
+<p>Optional. Without a config every key has a default; if you don't want to configure anything, don't. <code>/slimspec:init</code> asks a few questions in the session and writes <code>.slimspec/config.yaml</code>:</p>
 <pre><code>mode: medium              <span class="cmt"># fast | medium | full</span>
 spec:
   format: claude-md       <span class="cmt"># claude-md | readme | central | native | none</span>
@@ -297,7 +294,7 @@ apply:
 review:
   depth: auto             <span class="cmt"># auto (by mode) | low | medium | high</span>
 models: {}                <span class="cmt"># per-role overrides</span></code></pre>
-<p class="note">Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. <span class="name">SlimSpec</span> never pushes.</p>
+<p class="note">Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. The expensive models get the thinking, the cheaper ones get the typing. With <code>commit: lane</code> or <code>wave</code> only the main session commits, never an agent. <span class="name">SlimSpec</span> never pushes. That's not a missing feature.</p>
 
 </main>
 

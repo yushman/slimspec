@@ -82,23 +82,18 @@ td.win { background: var(--accent-soft); }
 td.win strong { color: var(--accent); }
 .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
 .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
-.diagram { margin: 8px 0 20px; }
-.diagram svg { display: block; width: 100%; height: auto; }
-.diagram .narrow { display: none; max-width: 360px; margin: 0 auto; }
+figure.shot { margin: 8px 0 20px; }
+figure.shot.small img { width: 260px; max-width: 100%; padding: 0; background: none; filter: none; }
+.cta + .note { margin-top: 12px; }
+figure.shot img { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+@media (prefers-color-scheme: dark) {
+  figure.shot img { padding: 6px; filter: brightness(0.92); }
+}
 @media (max-width: 600px) {
   body { font-size: 16px; }
-  .diagram .wide { display: none; }
-  .diagram .narrow { display: block; }
   header.top nav { gap: 14px; }
   pre { font-size: 12.5px; padding: 12px; }
 }
-svg .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
-svg .box.hl { stroke: var(--accent); }
-svg .lbl { fill: var(--text); font: 600 15px var(--mono); }
-svg .edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
-svg .edge.loop { stroke-dasharray: 5 4; }
-svg .tag { fill: var(--accent); font: 12px var(--mono); }
-svg .tip { fill: var(--muted); }
 dl.phases { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 16px; }
 dl.phases dt { font-family: var(--mono); font-weight: 600; }
 dl.phases dd { margin: 0; }
@@ -126,7 +121,8 @@ footer a { margin-right: 16px; }
 
 <h1>Сильным моделям не нужны тяжёлые спеки.</h1>
 <p class="lead">Агент сам восстанавливает картину, быстро пробежав по коду. Спеке остаётся подсказать ему, что делать и где искать. А explore уже и есть спека изменения.</p>
-<p><span class="name">SlimSpec</span> — плагин для Claude Code, построенный на этой идее. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически: где искать и что нельзя сломать, и ничего больше.</p>
+<p><span class="name">SlimSpec</span> это плагин для Claude Code, построенный на этой идее. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически: где искать и что нельзя сломать, и ничего больше.</p>
+<p>Порядок тут обратный привычному SDD: сначала работа, а спека выходит из неё в конце, как стружка из-под рубанка.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -135,10 +131,26 @@ footer a { margin-right: 16px; }
   <a class="btn" href="https://github.com/yushman/slimspec">Репозиторий на GitHub</a>
   <span class="note">Дальше: <code>/slimspec &lt;идея&gt;</code></span>
 </div>
+<p class="note">Внутри только скиллы и описания агентов. Ни скриптов, ни хуков, ни CLI, так что ломаться тут почти нечему.</p>
+
+<h2 id="why">Зачем</h2>
+<p>Пока модели были послабее, SDD выручал. Контекст тесный, сабагентов нет, и каждая новая сессия открывала проект с лицом стажёра в первый рабочий день. Решение было простое: всё записать, записанное закоммитить, следующей сессии дать почитать. Так появились OpenSpec и Superpowers, и их лучшая находка, дизайн раньше плана, здесь осталась.</p>
+<p>А потом попалось изменение в проекте вообще без SDD-фреймворка. Ни proposal, ни design, ни дельт, ни даже <code>tasks.md</code>. Модель прочитала код, нашла, что трогать, внесла правку, и правка прошла живое ревью у кодовнера. Ни одна спека при этом не пострадала: их просто не было.</p>
+<p>На командном проекте с OpenSpec картина была другая. Корпоративная подписка, несколько терминалов с разными фичами, а процесс всё равно полз:</p>
+<ul>
+  <li>После proposal пишутся design, tasks, дельты спек и прочее. Читали их редко. Зато все они коммитились и уезжали в архив: без бумажки ты букашка.</li>
+  <li>Любая правка в незаархивированном change рождает ещё один change. Передумали на полпути? Возьмите талончик, как в МФЦ, и ждите своей очереди.</li>
+  <li>Перед архивацией обязателен ребейз, а потом агента просят вручную проверить мерж спек: вдруг коллега уже переписал секцию, куда ляжет блок MODIFIED.</li>
+</ul>
+<p>Рекорд по бумажной работе поставила задача на удаление. Выпилить ненужный кусок экрана: убрать код, убрать тесты, закрыть тикет. Дифф в итоге такой:</p>
+<figure class="shot small"><a href="../img/diff-removal.png"><img src="../img/diff-removal.png" alt="Сводка диффа пул-реквеста: 99 файлов, +5218 −5495 строк, хотя задача была только удалить фичу" loading="lazy"></a></figure>
+<p>Ушло около 5,5 тысячи строк, и почти столько же пришло. Пришли спеки: proposal (зачем удаляем), design (как удаляем), tasks (в каком порядке) и дельты REMOVED (что именно удалили). Чтобы стереть ~5 тысяч строк кода, пришлось написать ~5 тысяч строк спек. Примерно как выносить мусор в сопровождении нотариуса.</p>
+<p>В <span class="name">SlimSpec</span> дизайном служит сама основная сессия. Вы обсуждаете изменение с агентом, и дизайн с планом складываются прямо в разговоре. Отступления фиксируются там же, нового change не требуется; если доработка разрастается, агент предлагает отправить её в non-goals. Файлы нужны только на случай, если сессия потеряется или её сожмёт компакшн. Это точка сохранения, а не сама игра.</p>
+<figure class="shot"><a href="../img/ru/artifacts.png"><img src="../img/ru/artifacts.png" alt="Артефакты изменения: OpenSpec пишет proposal, design, tasks и дельты спек и архивирует их в git; SlimSpec держит два файла в .gitignore, explore.md и tasks.md, дистиллирует их в CLAUDE.md модуля и удаляет" loading="lazy"></a></figure>
 
 <h2 id="result">Замеры на реальном проекте</h2>
 <h3>Миграция</h3>
-<p>Один существующий проект, просмотрщик логов на Rust с веб-интерфейсом, перевели с OpenSpec командой <code>/slimspec:migrate-openspec</code>. До и после:</p>
+<p>Один существующий проект, <a href="https://github.com/yushman/looqlog">looqlog</a>, просмотрщик логов на Rust с веб-интерфейсом, перевели с OpenSpec командой <code>/slimspec:migrate-openspec</code>. У него было 23 файла спек, 23 изменения в архиве, 200 файлов в <code>openspec/</code> и 733&nbsp;КБ истории. Агенту из этого было нужно немногое, но коллекция, как водится, пополнялась сама. До и после:</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th><span class="name">SlimSpec</span></th></tr></thead>
@@ -150,23 +162,25 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
+<figure class="shot"><a href="../img/ru/chart-migration.png"><img src="../img/ru/chart-migration.png" alt="Диаграмма миграции looqlog: спеки поведения 2 941 строка в OpenSpec против 484 в SlimSpec, архив изменений 12 394 строки против 0, файлов в openspec/ 200 против 0" loading="lazy"></a></figure>
 <h3>Откуда разница</h3>
 <ul>
-  <li>Сценарии WHEN/THEN влились в требования, которые они и описывали. Пустые разделы Purpose и шаблонные SHALL ушли.</li>
+  <li>Сценарии WHEN/THEN влились в требования, которые они и описывали. Пустые разделы Purpose и шаблонные SHALL ушли (SHALL, SHALL NOT, SHALL ALWAYS: спеки начали звучать как пользовательское соглашение).</li>
   <li>Одна спека на модуль вместо 23 на фичи. Агент читает только спеку модуля, в котором работает: правка в <code>web/</code> подтягивает ~11&nbsp;КБ, а не россыпь capability-файлов по всему дереву.</li>
   <li>Архива изменений в рабочем дереве больше нет. В git-истории того проекта он остался.</li>
 </ul>
 <h3>Что потеряно</h3>
+<p>Гладко было на бумаге, а на деле кое-что пришлось отдать:</p>
 <div class="callout">
 <ul>
   <li>Сценариев как списка тест-кейсов больше нет.</li>
-  <li>Обоснования отдельных изменений пропали. Часть сохранилась в ADR, остальное есть только в git-истории.</li>
+  <li>Обоснования отдельных изменений пропали. Часть сохранилась в ADR, остальное есть только в git-истории, для любителей <code>git blame</code> по выходным.</li>
   <li>Самая большая спека модуля (~14&nbsp;КБ) грузится целиком при любой работе в этом модуле.</li>
 </ul>
 </div>
-<p>Спустя четыре изменения на <span class="name">SlimSpec</span> спеки модулей — 4 файла и 641 строка, всё ещё на 78% меньше спек OpenSpec, которые они заменили.</p>
+<p>Спустя четыре изменения на <span class="name">SlimSpec</span> спеки модулей занимают 4 файла и 641 строку, всё ещё на 78% меньше спек OpenSpec, которые они заменили. Рост теперь идёт вслед за кодом, а не за церемониями.</p>
 <h3>Стоимость изменения</h3>
-<p>Тот же проект до и после миграции, замер по транскриптам Claude Code. Токены — весь вход, который обработала модель (input + чтение кэша + запись в кэш), основная сессия и субагенты вместе. Самая близкая по размеру пара:</p>
+<p>Тот же проект до и после миграции, замер по транскриптам Claude Code. Токенами здесь считается весь вход, который обработала модель (input + чтение кэша + запись в кэш), основная сессия и субагенты вместе. Самая близкая по размеру пара:</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th><span class="name">SlimSpec</span> full (<code>iana-tz-hash</code>)</th></tr></thead>
@@ -175,65 +189,47 @@ footer a { margin-right: 16px; }
     <tr><td>Обработано токенов</td><td>45,7M</td><td class="win"><strong>29,7M (−35%)</strong></td></tr>
     <tr><td>Токенов на строку кода</td><td>~110k</td><td class="win"><strong>~68k (−38%)</strong></td></tr>
     <tr><td>Ревью</td><td>нет</td><td class="win"><strong>2 раунда verify на глубине high; один реальный блокер (паника на крайних датах) исправлен внутри изменения</strong></td></tr>
-    <tr><td>Закоммичено процессных файлов</td><td>~530 строк (proposal, design, tasks, дельты спек, devlog)</td><td class="win"><strong>0</strong> (папка изменения удалена; правки спек — в <code>CLAUDE.md</code> модулей)</td></tr>
-    <tr><td>Время от начала до конца, с гейтами</td><td>91 мин</td><td>56 мин</td></tr>
+    <tr><td>Закоммичено процессных файлов</td><td>~530 строк (proposal, design, tasks, дельты спек, devlog)</td><td class="win"><strong>0</strong> (папка изменения удалена; правки спек лежат в <code>CLAUDE.md</code> модулей)</td></tr>
+    <tr><td>Общее время, с гейтами</td><td>91 мин</td><td>56 мин</td></tr>
   </tbody>
 </table>
 </div>
-<p>При этом <span class="name">SlimSpec</span> сделал больше: 5 вопросов по решениям и 3 гейта, 9 задач в 3 волнах, ground в 4 спеки, ADR и оба README.</p>
-<p>Мелкие изменения показывают то же. Два изменения на OpenSpec обработали 31,5M и 45,7M токенов; два на <span class="name">SlimSpec</span> (fast и medium) — 6,8M и 12,5M. Один implementer в OpenSpec в одиночку обрабатывал 13–16M токенов, субагент <span class="name">SlimSpec</span> — 0–1M, потому что каждому достаётся одна узкая дорожка.</p>
-<p class="note">Оговорки: n = 1–2 на подход, один проект. Мелкие изменения на <span class="name">SlimSpec</span> были в 5–10 раз меньше по коду, так что часть разницы — размер. Часть агентов <span class="name">SlimSpec</span> работала на Sonnet или Haiku. Основная сессия прогона <span class="name">SlimSpec</span> full несла посторонний контекст из более ранней работы, что завышает её счёт.</p>
+<figure class="shot"><a href="../img/ru/chart-tokens.png"><img src="../img/ru/chart-tokens.png" alt="Диаграмма токенов на изменение: в сопоставимой паре OpenSpec 45,7M против 29,7M у SlimSpec full (−35%); мелкие изменения OpenSpec 31,5M и 45,7M против SlimSpec fast 6,8M и medium 12,5M; токенов на строку кода ~110k против ~68k" loading="lazy"></a></figure>
+<p>При этом <span class="name">SlimSpec</span> сделал больше: 5 вопросов по решениям и 3 гейта, 9 задач в 3 волнах, ground в 4 спеки, ADR и оба README. Блокер, который поймал ревьюер, был паникой на крайних датах. Такие баги тихо сидят в коде, пока календарь не выкинет что-нибудь необычное.</p>
+<p>Мелкие изменения показывают то же. Два изменения на OpenSpec обработали 31,5M и 45,7M токенов, два на <span class="name">SlimSpec</span> (fast и medium) 6,8M и 12,5M. Один implementer в OpenSpec в одиночку обрабатывал 13–16M токенов, субагент <span class="name">SlimSpec</span> 0–1M, потому что каждому достаётся одна узкая дорожка и держать в голове весь репозиторий ему не нужно.</p>
+<p class="note">Оговорки сразу: n = 1–2 на подход, один проект. Мелкие изменения на <span class="name">SlimSpec</span> были в 5–10 раз меньше по коду, так что часть разницы объясняется размером. Часть агентов <span class="name">SlimSpec</span> работала на Sonnet или Haiku. Основная сессия прогона <span class="name">SlimSpec</span> full несла посторонний контекст из более ранней работы, что завышает её счёт. Выборка маленькая, разрыв большой: это наблюдение, а не бенчмарк.</p>
 
 <h2 id="flow">Как идёт работа</h2>
 
-<div class="diagram" role="img" aria-label="explore, гейт, plan, гейт, apply, verify, ground. Verify возвращает баги реализации в apply как исправления, а вопросы к дизайну в refine; refine правит explore и отправляет инвалидированные задачи обратно в apply.">
-<svg class="wide" viewBox="0 0 720 200" aria-hidden="true">
-  <defs><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
-  <rect class="box hl" x="10" y="50" width="100" height="44" rx="7"/><text class="lbl" x="60" y="77" text-anchor="middle">explore</text>
-  <rect class="box hl" x="160" y="50" width="100" height="44" rx="7"/><text class="lbl" x="210" y="77" text-anchor="middle">plan</text>
-  <rect class="box" x="310" y="50" width="100" height="44" rx="7"/><text class="lbl" x="360" y="77" text-anchor="middle">apply</text>
-  <rect class="box" x="460" y="50" width="100" height="44" rx="7"/><text class="lbl" x="510" y="77" text-anchor="middle">verify</text>
-  <rect class="box" x="610" y="50" width="100" height="44" rx="7"/><text class="lbl" x="660" y="77" text-anchor="middle">ground</text>
-  <path class="edge" d="M110 72H157" marker-end="url(#aw)"/><text class="tag" x="135" y="64" text-anchor="middle">gate</text>
-  <path class="edge" d="M260 72H307" marker-end="url(#aw)"/><text class="tag" x="285" y="64" text-anchor="middle">gate</text>
-  <path class="edge" d="M410 72H457" marker-end="url(#aw)"/>
-  <path class="edge" d="M560 72H607" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M500 50C500 18 370 18 370 47" marker-end="url(#aw)"/><text class="tag" x="435" y="20" text-anchor="middle">fix</text>
-  <rect class="box" x="185" y="146" width="100" height="40" rx="7"/><text class="lbl" x="235" y="171" text-anchor="middle">refine</text>
-  <path class="edge loop" d="M520 94V166H288" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M185 166H60V97" marker-end="url(#aw)"/>
-  <path class="edge loop" d="M260 146V120H350V97" marker-end="url(#aw)"/>
-</svg>
-<svg class="narrow" viewBox="0 0 340 400" aria-hidden="true">
-  <defs><marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="tip" d="M0 0L10 5L0 10z"/></marker></defs>
-  <rect class="box hl" x="40" y="10" width="130" height="40" rx="7"/><text class="lbl" x="105" y="35" text-anchor="middle">explore</text>
-  <rect class="box hl" x="40" y="90" width="130" height="40" rx="7"/><text class="lbl" x="105" y="115" text-anchor="middle">plan</text>
-  <rect class="box" x="40" y="170" width="130" height="40" rx="7"/><text class="lbl" x="105" y="195" text-anchor="middle">apply</text>
-  <rect class="box" x="40" y="250" width="130" height="40" rx="7"/><text class="lbl" x="105" y="275" text-anchor="middle">verify</text>
-  <rect class="box" x="40" y="330" width="130" height="40" rx="7"/><text class="lbl" x="105" y="355" text-anchor="middle">ground</text>
-  <path class="edge" d="M105 50V87" marker-end="url(#an)"/><text class="tag" x="113" y="73">gate</text>
-  <path class="edge" d="M105 130V167" marker-end="url(#an)"/><text class="tag" x="113" y="153">gate</text>
-  <path class="edge" d="M105 210V247" marker-end="url(#an)"/>
-  <path class="edge" d="M105 290V327" marker-end="url(#an)"/>
-  <path class="edge loop" d="M40 270H16V190H37" marker-end="url(#an)"/><text class="tag" x="4" y="234" transform="rotate(-90 10 230)">fix</text>
-  <rect class="box" x="215" y="170" width="110" height="40" rx="7"/><text class="lbl" x="270" y="195" text-anchor="middle">refine</text>
-  <path class="edge loop" d="M170 270H270V213" marker-end="url(#an)"/>
-  <path class="edge loop" d="M270 170V30H173" marker-end="url(#an)"/>
-  <path class="edge loop" d="M215 190H173" marker-end="url(#an)"/>
-</svg>
-</div>
+<figure class="shot"><a href="../img/ru/flow.png"><img src="../img/ru/flow.png" alt="Цикл SlimSpec: explore, гейт, plan, гейт, apply, verify, ground. Verify возвращает баги реализации в apply как исправления, а вопросы к дизайну в refine; refine правит explore.md и отправляет инвалидированные задачи обратно в apply" loading="lazy"></a></figure>
+<p><code>refine</code> правит <code>explore.md</code> и отправляет инвалидированные задачи обратно в <code>apply</code>. Галя, отмена, но не всего чека, а только задетых позиций.</p>
 
 <dl class="phases">
-  <dt>explore</dt><dd>Агент-сканер читает спеки модулей, потом код, и возвращает короткую сводку. Основная сессия задаёт вам вопросы (одно решение на вопрос, независимые вместе) и пишет <code>explore.md</code>. К плану сама не переходит.</dd>
+  <dt>explore</dt><dd>Агент-сканер читает спеки модулей, потом код, и возвращает короткую сводку. Основная сессия задаёт вам вопросы (одно решение на вопрос, независимые вместе) и пишет <code>explore.md</code>. К плану сама не переходит. Готовьтесь, что вашей же идее зададут больше неудобных вопросов, чем вы планировали. В этом и смысл.</dd>
   <dt>plan</dt><dd>Планировщик пишет <code>tasks.md</code> волнами и делит каждую волну на дорожки из связанных задач. Дорожки одной волны трогают непересекающиеся файлы и идут параллельно. У каждой задачи указан первый падающий тест.</dd>
-  <dt>apply</dt><dd>На каждую дорожку свой исполнитель: он проходит её задачи по порядку и по каждой приносит доказательства red и green. Полный набор тестов гоняется после каждой волны.</dd>
+  <dt>apply</dt><dd>На каждую дорожку свой исполнитель: он проходит её задачи по порядку и по каждой приносит доказательства red и green. Полный набор тестов гоняется после каждой волны, чтобы дорожки, зелёные поодиночке, не сломались вместе незаметно.</dd>
   <dt>verify</dt><dd>Ревьюер сверяет результат с планом и дизайном, проверяет доказательства TDD и сам код. Баги уходят обратно в apply, вопросы к дизайну приходят к вам через <code>refine</code>.</dd>
   <dt>ground</dt><dd>Из изменения выделяются долговременные знания (поведение, инварианты, контракты, решения), и модель вливает их в спеки затронутых модулей. Поиск по ключевым словам для слияния не используется. После этого папка изменения удаляется.</dd>
 </dl>
+<figure class="shot"><a href="../img/ru/waves-lanes.png"><img src="../img/ru/waves-lanes.png" alt="tasks.md разбит на волны; каждая волна делится на параллельные дорожки из связанных задач с непересекающимися файлами, на дорожку один implementer" loading="lazy"></a></figure>
 
-<p>Остановок две: после explore и после plan. Каждая остановка начинается с подробного разбора: после explore показывается дизайн с диаграммами, после plan показывается полный план (волны, дорожки, тесты по задачам). Остальные фазы идут без остановок и возвращаются к вам только с вопросами агентов, замечаниями к дизайну или после двух автоматических циклов исправлений.</p>
-<p>Все решения принимает основная сессия. Субагенты выполняют работу и возвращают короткий структурированный отчёт: статус, файлы, решения, отступления от плана, red/green. Напрямую они вас ни о чём не спрашивают. Открытый вопрос возвращается как <code>BLOCKED</code>, основная сессия задаёт его вам и перезапускает агента с ответом.</p>
-<p>Изменение живёт в <code>.slimspec/changes/&lt;slug&gt;/</code>: это <code>explore.md</code> и <code>tasks.md</code>. Папка в <code>.gitignore</code> и удаляется после ground. Историю хранят ваши коммиты и обновлённые спеки.</p>
+<p>Остановок две: после explore и после plan. Каждая остановка начинается с подробного разбора: после explore показывается дизайн с диаграммами, после plan показывается полный план (волны, дорожки, тесты по задачам). Остальные фазы идут без остановок и возвращаются к вам только с вопросами агентов, замечаниями к дизайну или после двух автоматических циклов исправлений. В это время можно заняться чем-нибудь другим.</p>
+<p>Все решения принимает основная сессия. Субагенты выполняют работу и возвращают короткий структурированный отчёт: статус, файлы, решения, отступления от плана, red/green. Напрямую они вас ни о чём не спрашивают. Открытый вопрос возвращается как <code>BLOCKED</code>, основная сессия задаёт его вам и перезапускает агента с ответом. Отчёт выглядит так, без логов и диффов:</p>
+<pre><code>status: DONE | BLOCKED | FAILED
+task: T3
+files: [src/auth/token.ts, src/auth/token.test.ts]
+decisions: ["used existing clock abstraction"]
+deviations: ["renamed validate → verifyToken"]
+tdd:
+  red: "token.test.ts: rejects expired token — FAIL (expected 401, got 200)"
+  green: "12 passed"
+questions: []</code></pre>
+<p>Простыни тестовых логов в основную сессию не попадают, а каждое решение и каждый итог в ней есть.</p>
+<figure class="shot"><a href="../img/ru/main-session.png"><img src="../img/ru/main-session.png" alt="Основная сессия в центре принимает все решения; scanner, planner, несколько implementer, reviewer и grounder присылают ей короткие YAML-отчёты; вопрос BLOCKED идёт через основную сессию к пользователю, ответ возвращается агенту" loading="lazy"></a></figure>
+<p>Изменение живёт в <code>.slimspec/changes/&lt;slug&gt;/</code>: это <code>explore.md</code> и <code>tasks.md</code>. Папка в <code>.gitignore</code> и удаляется после ground. Историю хранят ваши коммиты и обновлённые спеки. Отряд не заметит потери бойца: всё ценное к этому моменту уже в спеках.</p>
+<p>Ground ближе всего к классическому SDD. План и процесс выбрасываются: в какой волне шла T3, не понадобится уже никому. Остальное вливает агент, который понимает, зачем делалось изменение. Утверждение, которое противоречит изменению, он переписывает, а не подселяет к нему соседа, иначе спека постепенно превращается в ветку комментариев, спорящую сама с собой. Потом агент проверяет, что обновлённая спека покрывает цель изменения и не спорит с принятыми решениями. Результат ложится во вложенный <code>CLAUDE.md</code> модуля, и следующий агент, зайдя в модуль, найдёт спеку уже на месте.</p>
+<figure class="shot"><a href="../img/ru/ground.png"><img src="../img/ru/ground.png" alt="Ground: из изменения дистиллируются долговременные знания, модель вливает их в CLAUDE.md модуля, результат сверяется с намерением изменения, папка изменения удаляется" loading="lazy"></a></figure>
+<p>TDD проверяется по свидетельствам red/green, а не хуком. Verify не примет задачу без red-прогона, и падать red должен по делу: тест, упавший на отсутствующем импорте, ничего не доказывает. Ты не пройдёшь! Где TDD неприменим (конфиг, стили, миграции), у задачи стоит <code>test: none — &lt;причина&gt;</code> и альтернативная проверка, а все такие исключения видны на гейте плана. Затерять «тут тесты не нужны» в середине списка не выйдет.</p>
 
 <h2 id="modes">Режимы</h2>
 <div class="table-scroll">
@@ -248,6 +244,7 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
+<p><code>fast</code> подходит для правки в одну строку, на которую стыдно писать proposal. <code>full</code> для изменения, на которое хочется вторую пару глаз. Не хотите выбирать? <code>/slimspec</code> предложит режим после скана.</p>
 <pre><code>/slimspec &lt;идея&gt;          <span class="cmt"># режим из конфига, предлагается после скана</span>
 /slimspec:fast &lt;идея&gt;     <span class="cmt"># фиксированный режим, без предложения</span>
 /slimspec:medium &lt;идея&gt;
@@ -256,13 +253,13 @@ footer a { margin-right: 16px; }
 <p class="note">Каждую фазу можно вызвать и отдельно: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">OpenSpec, Superpowers и <span class="name">SlimSpec</span></h2>
-<p><span class="name">SlimSpec</span> использует части обоих инструментов. В таблице перечислено только то, в чём <span class="name">SlimSpec</span> отличается; жирным в колонке <span class="name">SlimSpec</span> выделено, в чём он лучше.</p>
+<p><span class="name">SlimSpec</span> использует части обоих инструментов: дизайн раньше плана у обоих и слияние спек, после которого остаётся только важное, у OpenSpec. В таблице перечислено только то, в чём <span class="name">SlimSpec</span> отличается; жирным в колонке <span class="name">SlimSpec</span> выделено, в чём он лучше.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">SlimSpec</span></th></tr></thead>
   <tbody>
     <tr><td>Цикл</td><td>explore&nbsp;→ propose&nbsp;→ apply&nbsp;→ verify&nbsp;→ archive, на каждый шаг своя команда; explore и verify необязательны</td><td>brainstorming&nbsp;→ worktree&nbsp;→ plan&nbsp;→ execute&nbsp;→ завершение ветки; скиллы срабатывают сами</td><td class="win"><strong>Одна команда, две остановки.</strong> Ведёт от explore до ground, вы останавливаетесь на двух гейтах; verify не пропускается</td></tr>
-    <tr><td>Explore</td><td><code>/opsx:explore</code>, необязательный собеседник «подумать» перед proposal</td><td>brainstorming; когда дизайн проекта одобрен, следующим шагом идёт план</td><td class="win"><strong>Explore — это и есть спека изменения.</strong> Вопросы по одному решению записываются в <code>explore.md</code> (цель, не-цели, решения, риски); отдельных proposal и design нет</td></tr>
+    <tr><td>Explore</td><td><code>/opsx:explore</code>, необязательный собеседник «подумать» перед proposal</td><td>brainstorming; когда дизайн проекта одобрен, следующим шагом идёт план</td><td class="win"><strong>Explore и есть спека изменения.</strong> Вопросы по одному решению записываются в <code>explore.md</code> (цель, не-цели, решения, риски); отдельных proposal и design нет</td></tr>
     <tr><td>Артефакты изменения</td><td>proposal, design, tasks, дельты спек; потом папка уезжает в архив в репозитории</td><td>для проекта: дизайн-документ с датой в <code>docs/superpowers/specs/</code> (коммитится) и план в <code>docs/superpowers/plans/</code>; мелкие правки согласуются в чате</td><td class="win"><strong>В коммит идут только код и правки спек.</strong> <code>explore.md</code> + <code>tasks.md</code>, в <code>.gitignore</code>, удаляются после ground</td></tr>
     <tr><td>Живая спека</td><td>файл на capability в <code>openspec/specs/</code>, агент читает, когда вы на него укажете</td><td>нет; на проект один дизайн-документ</td><td class="win"><strong>Грузится сама и только там, где вы работаете.</strong> Одна спека на модуль во вложенном <code>CLAUDE.md</code></td></tr>
     <tr><td>Слияние спек</td><td>секции ADDED / MODIFIED / REMOVED применяются к основной спеке по требованиям при архивации</td><td>в живую спеку ничего не сливается</td><td class="win"><strong>Слияние по смыслу.</strong> Модель переписывает противоречия и сверяет результат с намерением изменения</td></tr>
@@ -271,20 +268,20 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p><strong>Чего нет в <span class="name">SlimSpec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (отладка, worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">SlimSpec</span> работает только с Claude Code и покрывает только spec-driven цикл.</p>
+<p><strong>Чего нет в <span class="name">SlimSpec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (отладка, worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">SlimSpec</span> работает только с Claude Code и покрывает только spec-driven цикл. Он крутит один цикл и держится своей дорожки.</p>
 
 <h2 id="migrate">Переезд с OpenSpec или Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → спеки модулей</span>
 /slimspec:migrate-superpowers  <span class="cmt"># дизайн-документы Superpowers → спеки модулей</span></code></pre>
 <ul>
   <li>Переносятся только спеки. Каждая спека источника привязывается к модулям, сжимается в ваш <code>spec.format</code> и сверяется с кодом.</li>
-  <li>Сначала вы подтверждаете таблицу «источник → спека» и решаете по каждому утверждению, с которым расходится код.</li>
+  <li>Сначала вы подтверждаете таблицу «источник → спека» и решаете по каждому утверждению, с которым расходится код. Ошибаться может любая сторона, и выбирать победителя за вас инструмент не станет.</li>
   <li>Изменения, планы и служебные файлы не конвертируются. Удаляются они только на финальном шаге очистки и только то, что вы подтвердите. Код не трогается.</li>
   <li>Сам плагин Superpowers удаляется через <code>/plugin uninstall</code>.</li>
 </ul>
 
 <h2 id="config">Конфиг</h2>
-<p>Конфиг необязателен: у каждого ключа есть значение по умолчанию. <code>/slimspec:init</code> задаёт несколько вопросов в сессии и записывает <code>.slimspec/config.yaml</code>:</p>
+<p>Конфиг необязателен: у каждого ключа есть значение по умолчанию, и если настраивать ничего не хочется, можно не настраивать. <code>/slimspec:init</code> задаёт несколько вопросов в сессии и записывает <code>.slimspec/config.yaml</code>:</p>
 <pre><code>mode: medium              <span class="cmt"># fast | medium | full</span>
 spec:
   format: claude-md       <span class="cmt"># claude-md | readme | central | native | none</span>
@@ -297,7 +294,7 @@ apply:
 review:
   depth: auto             <span class="cmt"># auto (по режиму) | low | medium | high</span>
 models: {}                <span class="cmt"># переопределения по ролям</span></code></pre>
-<p class="note">Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. <span class="name">SlimSpec</span> никогда не пушит.</p>
+<p class="note">Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. Дорогим моделям достаётся думать, дешёвым печатать. При <code>commit: lane</code> или <code>wave</code> коммитит только основная сессия, агенты никогда. <span class="name">SlimSpec</span> никогда не пушит, и это не недоделка.</p>
 
 </main>
 
