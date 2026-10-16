@@ -1,4 +1,4 @@
-# slimspec
+# SlimSpec
 
 Claude Code plugin: skills and agent definitions only, no scripts.
 

@@ -1,4 +1,4 @@
-# slimspec — design
+# SlimSpec — design
 
 ## Goal
 
@@ -223,7 +223,7 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
   drive an interactive script and `!` in the session has no TTY).
 
 ### D21. Migration from OpenSpec and Superpowers
-- **Context:** projects that adopt slimspec often carry OpenSpec capability specs or Superpowers
+- **Context:** projects that adopt SlimSpec often carry OpenSpec capability specs or Superpowers
   design docs; that knowledge should land in module specs, and the old files should not stay as a
   second source of truth.
 - **Choice:** two user-invoked skills, `/slimspec:migrate-openspec` and
@@ -241,7 +241,7 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
     changes, plans, tooling, workflow lines in `CLAUDE.md`) and deletes only what the user approves.
     History stays in git. The Superpowers plugin is uninstalled by the user.
 - **Rejected:** converting active changes and plans into `.slimspec/changes/` — needs new grammar,
-  evidence markers and reviewer exceptions for work slimspec did not plan; switching to `central`
+  evidence markers and reviewer exceptions for work SlimSpec did not plan; switching to `central`
   specs to mirror OpenSpec's per-capability files — splits specs from code, against D11; extending
   the core agents and skills for migration — a one-off job would add permanent weight to every
   cycle; one combined skill — the two sources share no format.
@@ -272,7 +272,7 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 - **Choice:** each question stays one decision with 2–4 options, recommendation first. Questions
   independent of each other's answers go together in one `AskUserQuestion` call (up to 4 per call;
   more means successive calls). A question whose options or relevance depend on another answer
-  waits for it. Applies everywhere slimspec asks: explore grilling, agent `BLOCKED` questions,
+  waits for it. Applies everywhere SlimSpec asks: explore grilling, agent `BLOCKED` questions,
   migration ambiguities.
 - **Rejected:** strictly one question per turn — slow, no gain when answers are independent; one
   big question mixing decisions — unanswerable options.
