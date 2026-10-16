@@ -1,6 +1,6 @@
 ---
 name: explore
-description: "Explore a change idea for slimspec: scan the project, grill the user one decision at a time, write `explore.md` (goal, non-goals, decisions, risks). Use for /slimspec:explore or to think a change through before any plan. Stops at the design."
+description: "Explore a change idea for slimspec: scan the project, grill the user one decision per question, independent questions together, write `explore.md` (goal, non-goals, decisions, risks). Use for /slimspec:explore or to think a change through before any plan. Stops at the design."
 argument-hint: "<idea | change-slug>"
 ---
 
@@ -33,7 +33,7 @@ Mode not pinned and no `explore.md` — suggest one and confirm: `fast` — one 
 
 ## 2. Grill
 
-One decision per question, options grounded in the brief, a one-line trade-off each. New branches from answers join the list. Whatever the code decides, answer yourself; ask only what the user must decide, never decide it for them. Show the open branches between questions; done when every branch affecting Goal, Non-goals or Decisions is resolved. **fast** — at most 3 questions; the rest goes to Risks.
+One decision per question, options grounded in the brief, a one-line trade-off each. Independent open branches are asked together in one call (up to 4); dependent ones after their answer. New branches from answers join the list. Whatever the code decides, answer yourself; ask only what the user must decide, never decide it for them. Show the open branches between calls; done when every branch affecting Goal, Non-goals or Decisions is resolved. **fast** — at most 3 questions (count questions, not calls); the rest goes to Risks.
 
 ## 3. Finalize
 

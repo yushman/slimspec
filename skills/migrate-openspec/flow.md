@@ -30,7 +30,7 @@ Show one table and ask via `AskUserQuestion`: approve / change.
 | project context | root `CLAUDE.md` | only facts not already there |
 | left out | — | why |
 
-Then one `AskUserQuestion` per `ambiguous` item: its options, recommendation first. Re-gate after changes until approved. All questions: one decision per question, 2–4 concrete options.
+Then ask the `ambiguous` items batched, one question per item (its options, recommendation first), up to 4 per call. Re-gate after changes until approved. All questions: one decision per question, 2–4 concrete options.
 
 ## 5. Distill
 

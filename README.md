@@ -63,7 +63,7 @@ explore --gate--> plan --gate--> apply --> verify --> ground
 
 `refine` patches `explore.md` and sends invalidated tasks back to `apply`.
 
-- `explore`: A scanner reads module specs, then code, and returns a short brief. The main session asks you one decision at a time and writes `explore.md`. It never moves on to a plan by itself.
+- `explore`: A scanner reads module specs, then code, and returns a short brief. The main session asks you questions (one decision per question, independent ones together) and writes `explore.md`. It never moves on to a plan by itself.
 - `plan`: A planner writes `tasks.md` in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.
 - `apply`: One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave.
 - `verify`: A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through `refine`.
@@ -109,7 +109,7 @@ slimspec borrows from both. The table covers only the parts slimspec does differ
 | Artifacts per change  | proposal, design, tasks, delta specs; the folder then moves to an archive in the repo | for a project: a dated design doc in `docs/superpowers/specs/` (committed) and a plan in `docs/superpowers/plans/`; small changes stay in chat | `explore.md` + `tasks.md`, gitignored, deleted after ground |
 | Spec merge            | ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive | no merge into a living spec; one design doc per project | the model merges into the module spec, rewrites contradictions, checks intent |
 | Subagents             | no built-in subagent mechanism | a fresh subagent per task with a review after each, or inline execution | scanner, planner, implementers, reviewer, grounder; structured reports, questions bubble up |
-| Explore               | `/opsx:explore`, an optional thinking partner before a proposal | brainstorming; once a project's design is approved, the next step is a plan | grilling one decision at a time; plan starts only after your gate |
+| Explore               | `/opsx:explore`, an optional thinking partner before a proposal | brainstorming; once a project's design is approved, the next step is a plan | grilling: one decision per question, independent ones together; plan starts only after your gate |
 
 **What they do better.** OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers covers far more ground: debugging, worktrees, code review and other skills beyond the spec flow, across many coding agents. slimspec works only with Claude Code and only does the spec-driven loop.
 

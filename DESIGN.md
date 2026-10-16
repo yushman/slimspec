@@ -98,7 +98,8 @@ the task's `files`, is `BLOCKED`.
 - **Context:** Superpowers' brainstorming always tries to produce a plan.
 - **Choice:** a scanner subagent first studies the project (module `CLAUDE.md` specs, then
   code) and returns a compact brief. The main session then grills the user, one decision
-  branch at a time, via `AskUserQuestion` only. When no open branches remain, it offers to
+  per question, via `AskUserQuestion` only: independent questions go together in one call (up
+  to 4), dependent ones after their answer. When no open branches remain, it offers to
   finalize `explore.md`; the user decides. Plan starts only after the gate.
 
 ### D7. Plan is written by a planner subagent and is parallel-aware
@@ -265,6 +266,17 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 - **Rejected:** showing raw `explore.md` / `tasks.md` — written for agents and resume, terse, no
   diagrams or current-vs-new contrast; writing the walkthrough to a file — one more artifact per
   change.
+
+### D23. Independent questions are asked together
+- **Context:** one question per turn makes the user wait for a round trip per decision even when
+  the set is known upfront.
+- **Choice:** each question stays one decision with 2–4 options, recommendation first. Questions
+  independent of each other's answers go together in one `AskUserQuestion` call (up to 4 per call;
+  more means successive calls). A question whose options or relevance depend on another answer
+  waits for it. Applies everywhere slimspec asks: explore grilling, agent `BLOCKED` questions,
+  migration ambiguities.
+- **Rejected:** strictly one question per turn — slow, no gain when answers are independent; one
+  big question mixing decisions — unanswerable options.
 
 ## Artifacts
 

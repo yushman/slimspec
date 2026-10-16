@@ -52,4 +52,4 @@ Launch `slimspec:scanner | planner | implementer | reviewer | grounder` with the
 
 ## Asking the user
 
-Only via `AskUserQuestion`, never in plain text: one decision per question, 2–4 concrete options, your recommendation first. Never answer an agent's question yourself.
+Only via `AskUserQuestion`, never in plain text: one decision per question, 2–4 concrete options, your recommendation first. Questions independent of each other's answers go together in one call (up to 4; more → successive calls); a question that depends on another answer waits for it. Never answer an agent's question yourself.
