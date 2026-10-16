@@ -211,7 +211,7 @@ footer a { margin-right: 16px; }
   <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.</dd>
 </dl>
 
-<p>You stop twice: after explore and after plan. The rest runs on its own and comes back to you only for agent questions, design findings, or after two automatic fix cycles.</p>
+<p>You stop twice: after explore and after plan. Each stop opens with a detailed walkthrough: the design with diagrams after explore, the full plan (waves, lanes, tests per task) after plan. The rest runs on its own and comes back to you only for agent questions, design findings, or after two automatic fix cycles.</p>
 <p>The main session owns every decision. Subagents execute and return a short structured report (status, files, decisions, deviations, red/green evidence). They never ask you directly: an open question comes back as <code>BLOCKED</code>, the main session asks you and relaunches the agent with the answer.</p>
 <p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. The folder is gitignored and removed after ground; the history is your commits and the updated specs.</p>
 

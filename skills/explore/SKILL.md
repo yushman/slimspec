@@ -15,7 +15,7 @@ Explore writes only `explore.md` — no code, tests or tasks — and never start
 - Every claim about the project cites the brief or `path:line`; where the brief is silent, read the code.
 - When the user's premise conflicts with code or specs, show the evidence first; recheck your own recommendation against the code.
 - Never present a guess as fact; what stays unknown goes to Risks.
-- ASCII diagrams and `preview` (single-select only) only when options differ in structure (layouts, data flow, code shape); never decorative.
+- In questions, ASCII diagrams and `preview` (single-select only) only when options differ in structure (layouts, data flow, code shape); the step 3 walkthrough uses diagrams wherever structure, flow or state changes; never decorative.
 
 ## Entry points
 
@@ -37,7 +37,15 @@ One decision per question, options grounded in the brief, a one-line trade-off e
 
 ## 3. Finalize
 
-- **medium, full** — ask: finalize / keep exploring (open branches named); keep exploring → step 2. This is the `medium` explore gate.
+- **medium, full** — first present the walkthrough in chat (no file), detailed enough to approve without opening files:
+  - goal and observable outcome
+  - how it works now vs after, citing `path:line`
+  - ASCII diagrams wherever structure, data flow, control flow or state changes (before/after when it helps)
+  - each decision: why, rejected alternatives
+  - touched modules, files, public contracts
+  - non-goals, risks
+
+  Then ask: finalize / keep exploring (open branches named); keep exploring → step 2. This is the `medium` explore gate.
 - **fast** — no offer; plan holds the combined gate.
 
 Create `.slimspec/changes/<slug>/` and make sure `.slimspec/changes/` is a line of the project's `.gitignore` (append; create the file if missing; never touch other lines). Write `explore.md` there from `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/explore-template.md`; Decisions carry context, choice and rejected alternatives.

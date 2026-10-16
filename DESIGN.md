@@ -41,7 +41,7 @@ explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ─�
 | verify | reviewer, review depth `low`   | reviewer, review depth `medium` | reviewer, review depth `high`            |
 | ground | update touched specs           | distill + intent check        | same                                       |
 
-Medium gates: after explore and after plan. Apply → verify → ground then run without
+Medium gates: after explore and after plan, each opening with a detailed walkthrough (D22). Apply → verify → ground then run without
 stopping, except for escalations. `fast` has one combined gate on design and tasks. `full` adds
 an explicit gate on the written `explore.md` and shows the whole `tasks.md` at the plan gate.
 
@@ -245,6 +245,26 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
   specs to mirror OpenSpec's per-capability files — splits specs from code, against D11; extending
   the core agents and skills for migration — a one-off job would add permanent weight to every
   cycle; one combined skill — the two sources share no format.
+
+### D22. Gates present a detailed walkthrough
+- **Context:** a gate is where the user approves; a bare finalize question or one line per task
+  forces the user to open files or approve blind.
+- **Choice:** before each gate question the main session writes a walkthrough in chat (not a file
+  — no new artifacts).
+  - Explore: goal and observable outcome; how it works now vs after, citing `path:line`; ASCII
+    diagrams wherever structure, data flow, control flow or state changes (before/after when it
+    helps), never decorative; each decision with why and rejected alternatives; touched modules,
+    files and public contracts; non-goals; risks.
+  - Plan: totals (waves, lanes, tasks, exemptions); an ASCII diagram of waves → lanes → tasks with
+    dependencies; per wave why it waits and why its lanes are independent; per task what changes
+    and why, files, what the first failing test asserts, the done criterion; `test: none`
+    exemptions listed separately with their check; what runs after approval (parallel lanes up to
+    `apply.agents`, full suite per wave, review depth, commit policy, ground).
+  - `fast`'s combined gate gets a condensed version of both. `full` additionally shows the written
+    files in full, as before.
+- **Rejected:** showing raw `explore.md` / `tasks.md` — written for agents and resume, terse, no
+  diagrams or current-vs-new contrast; writing the walkthrough to a file — one more artifact per
+  change.
 
 ## Artifacts
 

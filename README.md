@@ -69,7 +69,7 @@ explore --gate--> plan --gate--> apply --> verify --> ground
 - `verify`: A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through `refine`.
 - `ground`: Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.
 
-You stop twice: after explore and after plan. The rest runs on its own and comes back to you only for agent questions, design findings, or after two automatic fix cycles.
+You stop twice: after explore and after plan. Each stop opens with a detailed walkthrough: the design with diagrams after explore, the full plan (waves, lanes, tests per task) after plan. The rest runs on its own and comes back to you only for agent questions, design findings, or after two automatic fix cycles.
 
 The main session owns every decision. Subagents execute and return a short structured report (status, files, decisions, deviations, red/green evidence). They never ask you directly: an open question comes back as `BLOCKED`, the main session asks you and relaunches the agent with the answer.
 

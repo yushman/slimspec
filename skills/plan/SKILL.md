@@ -15,11 +15,16 @@ Input: `$ARGUMENTS` — change slug. Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec
 
 ## 2. Gate
 
-Ask via `AskUserQuestion`: approve / change. In every mode, list each `test: none` exemption separately.
+Present the walkthrough in chat (no file), then ask via `AskUserQuestion`: approve / change. In every mode, list each `test: none` exemption separately, with its check.
 
-- **medium** — waves and their lanes with the justification, one line per task (id, lane, files, test-first or exemption, done).
-- **fast** — one combined gate: Goal, Decisions and the tasks.
-- **full** — `tasks.md` in full.
+- **medium** — the plan walkthrough:
+  - totals: waves, lanes, tasks, exemptions
+  - ASCII diagram of waves → lanes → tasks with dependencies
+  - per wave: why it waits, why its lanes are independent
+  - per task: what changes and why, files, what the first failing test asserts, done criterion
+  - after approval: parallel lanes up to `apply.agents`, full suite per wave, review depth, commit policy, ground
+- **fast** — one combined gate: condensed design (Goal, Decisions) and condensed plan walkthrough.
+- **full** — the walkthrough plus `tasks.md` in full.
 
 On change: small edits yourself; structural changes — relaunch the planner with the feedback. Gate again until approved.
 
