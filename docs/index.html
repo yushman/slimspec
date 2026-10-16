@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>slimspec — lightweight specs for Claude Code</title>
-<meta name="description" content="slimspec is a Claude Code plugin: explore, plan, apply, verify, ground with mandatory red-green TDD, two temporary files per change and one compact spec per module as a nested CLAUDE.md.">
+<title>SlimSpec — lightweight specs for Claude Code</title>
+<meta name="description" content="SlimSpec is a Claude Code plugin: explore, plan, apply, verify, ground with mandatory red-green TDD, two temporary files per change and one compact spec per module as a nested CLAUDE.md.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yushman.github.io/slimspec/">
-<meta property="og:title" content="slimspec — lightweight specs for Claude Code">
+<meta property="og:title" content="SlimSpec — lightweight specs for Claude Code">
 <meta property="og:description" content="Strong models don't need heavy specs. An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.">
 <link rel="alternate" hreflang="ru" href="https://yushman.github.io/slimspec/ru/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -115,7 +115,7 @@ footer a { margin-right: 16px; }
 <div class="wrap">
 
 <header class="top">
-  <a class="brand" href="./">slimspec</a>
+  <a class="brand" href="./">SlimSpec</a>
   <nav>
     <a href="https://github.com/yushman/slimspec">GitHub</a>
     <a href="ru/" hreflang="ru" lang="ru">Русский</a>
@@ -126,7 +126,7 @@ footer a { margin-right: 16px; }
 
 <h1>Strong models don't need heavy specs.</h1>
 <p class="lead">An agent rebuilds the picture by scanning the code, and it does that fast. A spec only has to tell it what to do and where to look. The explore step already is the spec of a change.</p>
-<p><span class="name">slimspec</span> is a Claude Code plugin built on that. It runs the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested <code>CLAUDE.md</code>, which Claude Code loads automatically: where to look and what must not break, nothing else.</p>
+<p><span class="name">SlimSpec</span> is a Claude Code plugin built on that. It runs the explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify loop with mandatory red-green TDD. A change uses two temporary files. Each module has one compact spec in a nested <code>CLAUDE.md</code>, which Claude Code loads automatically: where to look and what must not break, nothing else.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -141,7 +141,7 @@ footer a { margin-right: 16px; }
 <p>One existing project, a Rust + web log viewer, was moved from OpenSpec with <code>/slimspec:migrate-openspec</code>. Before and after:</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec</th><th><span class="name">slimspec</span></th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec</th><th><span class="name">SlimSpec</span></th></tr></thead>
   <tbody>
     <tr><td>Behavior specs</td><td class="num">23 files, 2,941 lines, ~155&nbsp;KB</td><td class="num">3 files, 484 lines, ~34&nbsp;KB</td></tr>
     <tr><td>Change archive</td><td class="num">23 changes, 12,394 lines, ~733&nbsp;KB</td><td class="num">0</td></tr>
@@ -164,12 +164,12 @@ footer a { margin-right: 16px; }
   <li>The largest module spec (~14&nbsp;KB) is loaded whole for any work in that module.</li>
 </ul>
 </div>
-<p>Four <span class="name">slimspec</span> changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced.</p>
+<p>Four <span class="name">SlimSpec</span> changes later the module specs are 4 files and 641 lines, still 78% below the OpenSpec specs they replaced.</p>
 <h3>Cost per change</h3>
 <p>The same project, before and after the migration, measured from Claude Code transcripts. Tokens are all input the model processed (input + cache read + cache write), main session and subagents together. The closest pair in size:</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th><span class="name">slimspec</span> full (<code>iana-tz-hash</code>)</th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th><span class="name">SlimSpec</span> full (<code>iana-tz-hash</code>)</th></tr></thead>
   <tbody>
     <tr><td>Code changed</td><td>409 lines, 4 files, one module</td><td>435 lines, 15 files, three modules</td></tr>
     <tr><td>Tokens processed</td><td>45.7M</td><td class="win"><strong>29.7M (−35%)</strong></td></tr>
@@ -180,9 +180,9 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p>The <span class="name">slimspec</span> run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs.</p>
-<p>Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two <span class="name">slimspec</span> changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a <span class="name">slimspec</span> subagent 0–1M, because each gets one narrow lane.</p>
-<p class="note">Caveats: n = 1–2 per flow, one project. The small <span class="name">slimspec</span> changes were 5–10× smaller in code, so part of that gap is size. Some <span class="name">slimspec</span> agents ran on Sonnet or Haiku. The <span class="name">slimspec</span> full run's main session carried earlier unrelated context, which inflates its count.</p>
+<p>The <span class="name">SlimSpec</span> run also did more: 5 decision questions and 3 gates, 9 tasks in 3 waves, ground into 4 specs, an ADR and both READMEs.</p>
+<p>Smaller changes point the same way. Two OpenSpec changes processed 31.5M and 45.7M tokens; two <span class="name">SlimSpec</span> changes (fast and medium) 6.8M and 12.5M. One OpenSpec implementer alone processed 13–16M tokens; a <span class="name">SlimSpec</span> subagent 0–1M, because each gets one narrow lane.</p>
+<p class="note">Caveats: n = 1–2 per flow, one project. The small <span class="name">SlimSpec</span> changes were 5–10× smaller in code, so part of that gap is size. Some <span class="name">SlimSpec</span> agents ran on Sonnet or Haiku. The <span class="name">SlimSpec</span> full run's main session carried earlier unrelated context, which inflates its count.</p>
 
 <h2 id="flow">The flow</h2>
 
@@ -256,10 +256,10 @@ footer a { margin-right: 16px; }
 <p class="note">Each phase is also a command of its own: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">Compared with OpenSpec and Superpowers</h2>
-<p><span class="name">slimspec</span> reuses parts of both. The table lists only the points where <span class="name">slimspec</span> differs; the bold part of each <span class="name">slimspec</span> cell is what it does better.</p>
+<p><span class="name">SlimSpec</span> reuses parts of both. The table lists only the points where <span class="name">SlimSpec</span> differs; the bold part of each <span class="name">SlimSpec</span> cell is what it does better.</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">slimspec</span></th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">SlimSpec</span></th></tr></thead>
   <tbody>
     <tr><td>Flow</td><td>explore&nbsp;→ propose&nbsp;→ apply&nbsp;→ verify&nbsp;→ archive, a command per step; explore and verify are optional</td><td>brainstorming&nbsp;→ worktree&nbsp;→ plan&nbsp;→ execute&nbsp;→ finish branch; skills trigger on their own</td><td class="win"><strong>One command, two stops.</strong> It runs explore&nbsp;→ ground; you stop at two gates; verify is never skipped</td></tr>
     <tr><td>Explore</td><td><code>/opsx:explore</code>, an optional thinking partner before a proposal</td><td>brainstorming; once a project's design is approved, the next step is a plan</td><td class="win"><strong>Explore is the spec of the change.</strong> Grilling, one decision per question, writes <code>explore.md</code> (goal, non-goals, decisions, risks); no separate proposal or design</td></tr>
@@ -271,7 +271,7 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p><strong>What <span class="name">slimspec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. <span class="name">slimspec</span> works only with Claude Code and covers only the spec-driven loop.</p>
+<p><strong>What <span class="name">SlimSpec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. <span class="name">SlimSpec</span> works only with Claude Code and covers only the spec-driven loop.</p>
 
 <h2 id="migrate">Migrating from OpenSpec or Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → module specs</span>
@@ -297,7 +297,7 @@ apply:
 review:
   depth: auto             <span class="cmt"># auto (by mode) | low | medium | high</span>
 models: {}                <span class="cmt"># per-role overrides</span></code></pre>
-<p class="note">Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. <span class="name">slimspec</span> never pushes.</p>
+<p class="note">Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. <span class="name">SlimSpec</span> never pushes.</p>
 
 </main>
 

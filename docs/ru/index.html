@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>slimspec — лёгкие спеки для Claude Code</title>
-<meta name="description" content="slimspec, плагин для Claude Code: explore, plan, apply, verify, ground с обязательным red-green TDD, двумя временными файлами на изменение и одной компактной спекой на модуль во вложенном CLAUDE.md.">
+<title>SlimSpec — лёгкие спеки для Claude Code</title>
+<meta name="description" content="SlimSpec, плагин для Claude Code: explore, plan, apply, verify, ground с обязательным red-green TDD, двумя временными файлами на изменение и одной компактной спекой на модуль во вложенном CLAUDE.md.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yushman.github.io/slimspec/ru/">
-<meta property="og:title" content="slimspec — лёгкие спеки для Claude Code">
+<meta property="og:title" content="SlimSpec — лёгкие спеки для Claude Code">
 <meta property="og:description" content="Сильным моделям не нужны тяжёлые спеки. Агент сам восстанавливает картину, быстро пробежав по коду. Спеке остаётся подсказать ему, что делать и где искать. А explore уже и есть спека изменения.">
 <link rel="alternate" hreflang="en" href="https://yushman.github.io/slimspec/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -115,7 +115,7 @@ footer a { margin-right: 16px; }
 <div class="wrap">
 
 <header class="top">
-  <a class="brand" href="./">slimspec</a>
+  <a class="brand" href="./">SlimSpec</a>
   <nav>
     <a href="https://github.com/yushman/slimspec">GitHub</a>
     <a href="../" hreflang="en" lang="en">English</a>
@@ -126,7 +126,7 @@ footer a { margin-right: 16px; }
 
 <h1>Сильным моделям не нужны тяжёлые спеки.</h1>
 <p class="lead">Агент сам восстанавливает картину, быстро пробежав по коду. Спеке остаётся подсказать ему, что делать и где искать. А explore уже и есть спека изменения.</p>
-<p><span class="name">slimspec</span> — плагин для Claude Code, построенный на этой идее. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически: где искать и что нельзя сломать, и ничего больше.</p>
+<p><span class="name">SlimSpec</span> — плагин для Claude Code, построенный на этой идее. Он запускает цикл explore&nbsp;→ plan&nbsp;→ apply&nbsp;→ verify с обязательным red-green TDD. На изменение заводятся два временных файла. У каждого модуля одна компактная спека во вложенном <code>CLAUDE.md</code>, который Claude Code подгружает автоматически: где искать и что нельзя сломать, и ничего больше.</p>
 
 <pre><code>/plugin marketplace add yushman/slimspec
 /plugin install slimspec@slimspec</code></pre>
@@ -141,7 +141,7 @@ footer a { margin-right: 16px; }
 <p>Один существующий проект, просмотрщик логов на Rust с веб-интерфейсом, перевели с OpenSpec командой <code>/slimspec:migrate-openspec</code>. До и после:</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec</th><th><span class="name">slimspec</span></th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec</th><th><span class="name">SlimSpec</span></th></tr></thead>
   <tbody>
     <tr><td>Спеки поведения</td><td class="num">23 файла, 2 941 строка, ~155&nbsp;КБ</td><td class="num">3 файла, 484 строки, ~34&nbsp;КБ</td></tr>
     <tr><td>Архив изменений</td><td class="num">23 изменения, 12 394 строки, ~733&nbsp;КБ</td><td class="num">0</td></tr>
@@ -164,12 +164,12 @@ footer a { margin-right: 16px; }
   <li>Самая большая спека модуля (~14&nbsp;КБ) грузится целиком при любой работе в этом модуле.</li>
 </ul>
 </div>
-<p>Спустя четыре изменения на <span class="name">slimspec</span> спеки модулей — 4 файла и 641 строка, всё ещё на 78% меньше спек OpenSpec, которые они заменили.</p>
+<p>Спустя четыре изменения на <span class="name">SlimSpec</span> спеки модулей — 4 файла и 641 строка, всё ещё на 78% меньше спек OpenSpec, которые они заменили.</p>
 <h3>Стоимость изменения</h3>
 <p>Тот же проект до и после миграции, замер по транскриптам Claude Code. Токены — весь вход, который обработала модель (input + чтение кэша + запись в кэш), основная сессия и субагенты вместе. Самая близкая по размеру пара:</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th><span class="name">slimspec</span> full (<code>iana-tz-hash</code>)</th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec (<code>logcat-padded-tags</code>)</th><th><span class="name">SlimSpec</span> full (<code>iana-tz-hash</code>)</th></tr></thead>
   <tbody>
     <tr><td>Изменено кода</td><td>409 строк, 4 файла, один модуль</td><td>435 строк, 15 файлов, три модуля</td></tr>
     <tr><td>Обработано токенов</td><td>45,7M</td><td class="win"><strong>29,7M (−35%)</strong></td></tr>
@@ -180,9 +180,9 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p>При этом <span class="name">slimspec</span> сделал больше: 5 вопросов по решениям и 3 гейта, 9 задач в 3 волнах, ground в 4 спеки, ADR и оба README.</p>
-<p>Мелкие изменения показывают то же. Два изменения на OpenSpec обработали 31,5M и 45,7M токенов; два на <span class="name">slimspec</span> (fast и medium) — 6,8M и 12,5M. Один implementer в OpenSpec в одиночку обрабатывал 13–16M токенов, субагент <span class="name">slimspec</span> — 0–1M, потому что каждому достаётся одна узкая дорожка.</p>
-<p class="note">Оговорки: n = 1–2 на подход, один проект. Мелкие изменения на <span class="name">slimspec</span> были в 5–10 раз меньше по коду, так что часть разницы — размер. Часть агентов <span class="name">slimspec</span> работала на Sonnet или Haiku. Основная сессия прогона <span class="name">slimspec</span> full несла посторонний контекст из более ранней работы, что завышает её счёт.</p>
+<p>При этом <span class="name">SlimSpec</span> сделал больше: 5 вопросов по решениям и 3 гейта, 9 задач в 3 волнах, ground в 4 спеки, ADR и оба README.</p>
+<p>Мелкие изменения показывают то же. Два изменения на OpenSpec обработали 31,5M и 45,7M токенов; два на <span class="name">SlimSpec</span> (fast и medium) — 6,8M и 12,5M. Один implementer в OpenSpec в одиночку обрабатывал 13–16M токенов, субагент <span class="name">SlimSpec</span> — 0–1M, потому что каждому достаётся одна узкая дорожка.</p>
+<p class="note">Оговорки: n = 1–2 на подход, один проект. Мелкие изменения на <span class="name">SlimSpec</span> были в 5–10 раз меньше по коду, так что часть разницы — размер. Часть агентов <span class="name">SlimSpec</span> работала на Sonnet или Haiku. Основная сессия прогона <span class="name">SlimSpec</span> full несла посторонний контекст из более ранней работы, что завышает её счёт.</p>
 
 <h2 id="flow">Как идёт работа</h2>
 
@@ -255,11 +255,11 @@ footer a { margin-right: 16px; }
 /slimspec                 <span class="cmt"># активные изменения: продолжить или отменить</span></code></pre>
 <p class="note">Каждую фазу можно вызвать и отдельно: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
-<h2 id="compare">OpenSpec, Superpowers и <span class="name">slimspec</span></h2>
-<p><span class="name">slimspec</span> использует части обоих инструментов. В таблице перечислено только то, в чём <span class="name">slimspec</span> отличается; жирным в колонке <span class="name">slimspec</span> выделено, в чём он лучше.</p>
+<h2 id="compare">OpenSpec, Superpowers и <span class="name">SlimSpec</span></h2>
+<p><span class="name">SlimSpec</span> использует части обоих инструментов. В таблице перечислено только то, в чём <span class="name">SlimSpec</span> отличается; жирным в колонке <span class="name">SlimSpec</span> выделено, в чём он лучше.</p>
 <div class="table-scroll">
 <table>
-  <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">slimspec</span></th></tr></thead>
+  <thead><tr><th></th><th>OpenSpec</th><th>Superpowers</th><th><span class="name">SlimSpec</span></th></tr></thead>
   <tbody>
     <tr><td>Цикл</td><td>explore&nbsp;→ propose&nbsp;→ apply&nbsp;→ verify&nbsp;→ archive, на каждый шаг своя команда; explore и verify необязательны</td><td>brainstorming&nbsp;→ worktree&nbsp;→ plan&nbsp;→ execute&nbsp;→ завершение ветки; скиллы срабатывают сами</td><td class="win"><strong>Одна команда, две остановки.</strong> Ведёт от explore до ground, вы останавливаетесь на двух гейтах; verify не пропускается</td></tr>
     <tr><td>Explore</td><td><code>/opsx:explore</code>, необязательный собеседник «подумать» перед proposal</td><td>brainstorming; когда дизайн проекта одобрен, следующим шагом идёт план</td><td class="win"><strong>Explore — это и есть спека изменения.</strong> Вопросы по одному решению записываются в <code>explore.md</code> (цель, не-цели, решения, риски); отдельных proposal и design нет</td></tr>
@@ -271,7 +271,7 @@ footer a { margin-right: 16px; }
   </tbody>
 </table>
 </div>
-<p><strong>Чего нет в <span class="name">slimspec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (отладка, worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">slimspec</span> работает только с Claude Code и покрывает только spec-driven цикл.</p>
+<p><strong>Чего нет в <span class="name">SlimSpec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (отладка, worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">SlimSpec</span> работает только с Claude Code и покрывает только spec-driven цикл.</p>
 
 <h2 id="migrate">Переезд с OpenSpec или Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → спеки модулей</span>
@@ -297,7 +297,7 @@ apply:
 review:
   depth: auto             <span class="cmt"># auto (по режиму) | low | medium | high</span>
 models: {}                <span class="cmt"># переопределения по ролям</span></code></pre>
-<p class="note">Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. <span class="name">slimspec</span> никогда не пушит.</p>
+<p class="note">Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. <span class="name">SlimSpec</span> никогда не пушит.</p>
 
 </main>
 
