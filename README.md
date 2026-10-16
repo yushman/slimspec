@@ -127,7 +127,7 @@ slimspec borrows from both. The table covers only the parts slimspec does differ
 
 ## Config
 
-Optional. Without a config every key has a default. `/slimspec:init` tells you how to run a small wizard that asks one question per key and writes `.slimspec/config.yaml`:
+Optional. Without a config every key has a default. `/slimspec:init` asks a few questions in the session and writes `.slimspec/config.yaml`:
 
 ```yaml
 mode: medium              # fast | medium | full
@@ -142,12 +142,6 @@ apply:
 review:
   depth: auto             # auto (by mode) | low | medium | high
 models: {}                # per-role overrides: scanner, planner, implementer, reviewer, grounder
-```
-
-Or run the wizard directly from the project root:
-
-```bash
-bash "<plugin dir>/scripts/init.sh"
 ```
 
 Default models: scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus, grounder — opus. slimspec never pushes.

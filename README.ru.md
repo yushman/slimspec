@@ -127,7 +127,7 @@ slimspec многое взял у обоих. В таблице только т�
 
 ## Конфиг
 
-Он необязателен: у каждого ключа есть значение по умолчанию. `/slimspec:init` подскажет, как запустить небольшой мастер. Тот задаёт по вопросу на ключ и записывает `.slimspec/config.yaml`:
+Он необязателен: у каждого ключа есть значение по умолчанию. `/slimspec:init` задаёт несколько вопросов в сессии и записывает `.slimspec/config.yaml`:
 
 ```yaml
 mode: medium              # fast | medium | full
@@ -142,12 +142,6 @@ apply:
 review:
   depth: auto             # auto (по режиму) | low | medium | high
 models: {}                # переопределения по ролям: scanner, planner, implementer, reviewer, grounder
-```
-
-Или запустить мастер напрямую из корня проекта:
-
-```bash
-bash "<каталог плагина>/scripts/init.sh"
 ```
 
 Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. slimspec никогда не пушит.
