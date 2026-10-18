@@ -2,6 +2,16 @@
   "name": "slimspec",
   "version": "0.1.5",
   "description": "Lightweight spec-driven development: explore, plan, apply, verify, ground with red-green TDD and specs as module CLAUDE.md files",
-  "author": { "name": "yushman" },
-  "keywords": ["spec-driven", "tdd", "workflow", "specs"]
+  "author": {
+    "name": "yushman"
+  },
+  "homepage": "https://yushman.github.io/slimspec/",
+  "repository": "https://github.com/yushman/slimspec",
+  "license": "MIT",
+  "keywords": [
+    "spec-driven",
+    "tdd",
+    "workflow",
+    "specs"
+  ]
 }
