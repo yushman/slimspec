@@ -202,14 +202,14 @@ footer a { margin-right: 16px; }
 <h2 id="flow">The flow</h2>
 
 <figure class="shot"><a href="img/en/flow.png"><img src="img/en/flow.png" alt="The SlimSpec cycle: explore, gate, plan, gate, apply, verify, ground. Verify sends implementation bugs back to apply as fixes and design issues to refine; refine patches explore.md and sends invalidated tasks back to apply" loading="lazy"></a></figure>
-<p><code>refine</code> patches <code>explore.md</code> and sends invalidated tasks back to <code>apply</code>.</p>
+<p><code>refine</code> patches <code>explore.md</code> and <code>tasks.md</code> and sends invalidated tasks back to <code>apply</code>. It starts from design findings in verify or from an apply task blocked because the design or plan is wrong.</p>
 
 <dl class="phases">
   <dt>explore</dt><dd>A scanner reads module specs, then code, and returns a short brief. The main session asks you questions (one decision per question, independent ones together) and writes <code>explore.md</code>. It never moves on to a plan by itself. Expect your own idea to get more pointed questions than you planned for; that's the point.</dd>
   <dt>plan</dt><dd>A planner writes <code>tasks.md</code> in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.</dd>
-  <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed.</dd>
+  <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed. A task blocked by the design or plan (a missing decision, wrong files, infeasible as planned) goes to you through <code>refine</code>, then apply continues.</dd>
   <dt>verify</dt><dd>A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through <code>refine</code>.</dd>
-  <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.</dd>
+  <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder <code>.slimspec/changes/&lt;slug&gt;/</code> is deleted; <code>.slimspec/</code> and its config stay.</dd>
 </dl>
 <figure class="shot"><a href="img/en/waves-lanes.png"><img src="img/en/waves-lanes.png" alt="tasks.md split into waves; each wave is divided into parallel lanes of related tasks that touch disjoint files, and each lane gets one implementer" loading="lazy"></a></figure>
 
@@ -293,8 +293,26 @@ apply:
   agents: 3               <span class="cmt"># max parallel implementers = max lanes per wave</span>
 review:
   depth: auto             <span class="cmt"># auto (by mode) | low | medium | high</span>
-models: {}                <span class="cmt"># per-role overrides</span></code></pre>
-<p class="note">Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. The expensive models get the thinking, the cheaper ones get the typing. With <code>commit: lane</code> or <code>wave</code> only the main session commits, never an agent. <span class="name">SlimSpec</span> never pushes. That's not a missing feature.</p>
+models: {}                <span class="cmt"># per-role overrides, see below</span></code></pre>
+<p><code>models</code> sets the model of each phase's agent, keyed by role: <code>haiku | sonnet | opus</code>. Keys you leave out keep their defaults.</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Phase</th><th>Role (<code>models</code> key)</th><th>Default</th></tr></thead>
+  <tbody>
+    <tr><td><code>explore</code> (medium, full)</td><td><code>scanner</code></td><td>sonnet</td></tr>
+    <tr><td><code>plan</code> (medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
+    <tr><td><code>refine</code> (structural replanning, medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
+    <tr><td><code>apply</code></td><td><code>implementer</code></td><td>sonnet</td></tr>
+    <tr><td><code>verify</code></td><td><code>reviewer</code></td><td>opus</td></tr>
+    <tr><td><code>ground</code></td><td><code>grounder</code></td><td>opus</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Questions, gates, triage and the rest of refine run in the main session, on your session's model. <code>fast</code> explores and plans inline there too.</p>
+<pre><code>models:
+  implementer: opus       <span class="cmt"># harder code than usual</span>
+  scanner: haiku          <span class="cmt"># a small, well-specified repo</span></code></pre>
+<p class="note">The expensive models get the thinking, the cheaper ones get the typing. With <code>commit: lane</code> or <code>wave</code> only the main session commits, never an agent. <span class="name">SlimSpec</span> never pushes. That's not a missing feature.</p>
 
 </main>
 

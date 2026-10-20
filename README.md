@@ -110,13 +110,13 @@ Caveats, up front: n = 1–2 per flow, one project. The small **SlimSpec** chang
 
 ![The SlimSpec cycle: explore, gate, plan, gate, apply, verify, ground. Verify sends implementation bugs back to apply as fixes and design issues to refine; refine patches explore.md and sends invalidated tasks back to apply](docs/img/en/flow.png)
 
-`refine` patches `explore.md` and sends invalidated tasks back to `apply`.
+`refine` patches `explore.md` and `tasks.md` and sends invalidated tasks back to `apply`. It starts from design findings in verify or from an apply task blocked because the design or plan is wrong.
 
 - `explore`: A scanner reads module specs, then code, and returns a short brief. The main session asks you questions (one decision per question, independent ones together) and writes `explore.md`. It never moves on to a plan by itself. Expect your own idea to get more pointed questions than you planned for; that's the point.
 - `plan`: A planner writes `tasks.md` in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.
-- `apply`: One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed.
+- `apply`: One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed. A task blocked by the design or plan (a missing decision, wrong files, infeasible as planned) goes to you through `refine`, then apply continues.
 - `verify`: A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through `refine`.
-- `ground`: Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder is deleted.
+- `ground`: Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder `.slimspec/changes/<slug>/` is deleted; `.slimspec/` and its config stay.
 
 ![tasks.md split into waves; each wave is divided into parallel lanes of related tasks that touch disjoint files, and each lane gets one implementer](docs/img/en/waves-lanes.png)
 
@@ -216,10 +216,29 @@ apply:
   agents: 3               # max parallel implementers = max lanes per wave
 review:
   depth: auto             # auto (by mode) | low | medium | high
-models: {}                # per-role overrides: scanner, planner, implementer, reviewer, grounder
+models: {}                # per-role overrides, see below
 ```
 
-Default models: sonnet for scanner and implementer, opus for planner, reviewer and grounder. The expensive models get the thinking, the cheaper ones get the typing. With `commit: lane` or `wave` only the main session commits, never an agent. **SlimSpec** never pushes. That's not a missing feature.
+`models` sets the model of each phase's agent, keyed by role: `haiku | sonnet | opus`. Keys you leave out keep their defaults.
+
+| Phase | Role (`models` key) | Default |
+|---|---|---|
+| explore (medium, full) | `scanner` | sonnet |
+| plan (medium, full) | `planner` | opus |
+| refine (structural replanning, medium, full) | `planner` | opus |
+| apply | `implementer` | sonnet |
+| verify | `reviewer` | opus |
+| ground | `grounder` | opus |
+
+Questions, gates, triage and the rest of refine run in the main session, on your session's model. `fast` explores and plans inline there too.
+
+```yaml
+models:
+  implementer: opus       # harder code than usual
+  scanner: haiku          # a small, well-specified repo
+```
+
+The expensive models get the thinking, the cheaper ones get the typing. With `commit: lane` or `wave` only the main session commits, never an agent. **SlimSpec** never pushes. That's not a missing feature.
 
 ---
 

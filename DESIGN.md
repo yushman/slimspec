@@ -29,8 +29,8 @@ Success looks like:
 
 ```
 explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ──▶ ground
-   ▲                               ▲          │
-   └──────────── refine ◀──────────┴──────────┘
+   ▲                               ▲ │        │
+   └──────────── refine ◀──────────┴─┴────────┘
 ```
 
 | Phase  | fast                           | medium                        | full                                       |
@@ -136,7 +136,8 @@ Reviewer findings come back to the main session:
 After two automatic fix cycles, the main session escalates to the user.
 
 ### D10. `refine` instead of re-running explore
-`refine` patches `explore.md` and `tasks.md` from verify findings or new user input, marks
+`refine` patches `explore.md` and `tasks.md` from verify findings, an apply task BLOCKED or FAILED
+because the design or plan is wrong, or new user input, marks
 affected tasks `invalidated`, and sends only those back to apply. Approval resets `fix-cycles`.
 
 ### D11. Specs are nested module `CLAUDE.md` files
@@ -152,7 +153,7 @@ affected tasks `invalidated`, and sends only those back to apply. Approval reset
 2. Merge into the module spec with the model, not by keywords: contradicting statements are
    rewritten, not appended.
 3. Check that the updated specs cover the Goal and agree with the Decisions.
-4. Delete `.slimspec/changes/<slug>/`. It never reached git (D13): the history is the commits and
+4. Delete only `.slimspec/changes/<slug>/`; `.slimspec/`, its config and `changes/` stay. It never reached git (D13): the history is the commits and
    the grounded specs.
 
 Scope: only modules touched by the diff. The root `CLAUDE.md` is updated only for

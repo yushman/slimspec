@@ -21,7 +21,7 @@ Prompt: change folder, the lane's open task ids in listed order, test command; f
 
 ## 2. Reports
 
-Per protocol. Each DONE: mark `- [x]`, drop the marker, write the `evidence:` (and `deviations:`) lines from the report — verify reads evidence only there, so a resume loses nothing. Commit per `commit`. A BLOCKED or FAILED task stops the rest of its lane (say so); other lanes finish. Relaunch that lane with its still-open tasks. BLOCKED on a decision in `explore.md` → after the answer, run `refine` before relaunching. Never widen a task's `files` without the user's answer.
+Per protocol. Each DONE: mark `- [x]`, drop the marker, write the `evidence:` (and `deviations:`) lines from the report — verify reads evidence only there, so a resume loses nothing. Commit per `commit`. A BLOCKED or FAILED task stops the rest of its lane (say so); other lanes finish. Relaunch that lane with its still-open tasks. A BLOCKED or FAILED task whose fix changes `explore.md` or tasks (a decision wrong or missing, scope, `files`, order, or the task infeasible as planned) → ask, then run `refine` with the report and the answer before relaunching; apply then runs the open and reopened tasks. Never widen a task's `files` without the user's answer.
 
 ## 3. Wave suite
 
@@ -35,4 +35,4 @@ Samples: `${CLAUDE_PLUGIN_ROOT}/skills/apply/examples.md`.
 
 - **Task** — `<id> done <closed>/<total> · red "<test>" → green <result>` (`test: none`: `check <result>`) `· deviation: <item>` when any; closed counts the whole change.
 - **Wave** — `Wave <n> · A: <ids> · B: <ids> · suite <result>` (+ commit); after the last wave `· apply done → verify`.
-- **Pause** — `Apply paused · <slug> · <closed>/<total> · <id> BLOCKED|FAILED: <reason>` (+ `· lane <L> stopped: <ids>` when tasks remain in it), then the question.
+- **Pause** — `Apply paused · <slug> · <closed>/<total> · <id> BLOCKED|FAILED: <reason>` (+ `· lane <L> stopped: <ids>` when tasks remain in it, `· → refine` when the fix changes the design or plan), then the question.

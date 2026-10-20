@@ -1,12 +1,12 @@
 ---
 name: refine
-description: "Patch an in-progress slimspec change from verify findings or new input: update `explore.md` and `tasks.md`, reopen only affected tasks. Use for /slimspec:refine or when requirements of an active slimspec change shift mid-cycle."
+description: "Patch an in-progress slimspec change from verify findings, a blocked apply task or new input: update `explore.md` and `tasks.md`, reopen only affected tasks. Use for /slimspec:refine or when requirements of an active slimspec change shift mid-cycle."
 argument-hint: "[change-slug] [what changed]"
 ---
 
 # refine
 
-Input: `$ARGUMENTS` — change slug and/or what changed; from the router, the design or intent findings. Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/protocol.md` unless loaded. Refine patches the change; explore is never re-run.
+Input: `$ARGUMENTS` — change slug and/or what changed; from the router, the design or intent findings of verify, or apply's BLOCKED / FAILED report with the user's answer. Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/protocol.md` unless loaded. Refine patches the change; explore is never re-run.
 
 1. **Resolve** what each finding or input changes (table below); when the user must choose, grill as in explore step 2.
 2. **Patch `explore.md`** in place; a superseded statement is replaced, never left beside its replacement.
@@ -25,4 +25,5 @@ Worked example: `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/examples.md`.
 | Scope grows | Goal (+ Decisions if a choice is needed) | new wave |
 | Scope shrinks | Goal; dropped part → Non-goals | invalidate done tasks whose code must go |
 | Non-goal touched, user keeps it out | — | invalidate the task that touched it |
+| Task infeasible as planned, or wrong `files` / order | Decisions, when the way to do it changes | adjust that task's fields, split it, or move it to a later wave; invalidate done tasks the change breaks |
 | New risk or accepted trade-off | Risks: mitigation or "accepted" | none, unless the mitigation is work |

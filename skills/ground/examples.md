@@ -95,7 +95,7 @@ Root `CLAUDE.md` — unchanged: no decision spans modules.
 ## Ground summary for the user
 
 ```
-Ground · login-lockout · closed · no commit (commit: none)
+Ground · login-lockout · closed · no commit (commit: none) · deleted .slimspec/changes/login-lockout/
 - packages/auth/CLAUDE.md — updated: add Lockout (6 statements) + 1 Login statement; modify login() errors; remove "failures not tracked"
 - packages/api/CLAUDE.md — updated: modify POST /login, POST /session/refresh (429 + Retry-After)
 - packages/db/CLAUDE.md — created: login_attempts table

@@ -19,5 +19,5 @@ Launch one `slimspec:grounder` with the change folder, `base:` sha, `spec.format
 Only after a DONE report with every gap closed or answered:
 
 - Commit the spec edits when `commit` is not `none`.
-- Delete `.slimspec/changes/<slug>/`.
-- Summary (sample: `${CLAUDE_PLUGIN_ROOT}/skills/ground/examples.md`): `Ground · <slug> · closed · <commit | no commit>`, then one line per spec file — created / updated, with its operations from the grounder's `decisions`.
+- Delete only `.slimspec/changes/<slug>/`. `.slimspec/`, `config.yaml` and `changes/` stay, even when `changes/` is left empty.
+- Summary (sample: `${CLAUDE_PLUGIN_ROOT}/skills/ground/examples.md`): `Ground · <slug> · closed · <commit | no commit> · deleted .slimspec/changes/<slug>/`, then one line per spec file — created / updated, with its operations from the grounder's `decisions`.

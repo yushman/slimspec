@@ -29,5 +29,5 @@ explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ─�
 ```
 
 - The explore and plan gates are the only planned stops; after the plan gate, apply → verify → ground run without stopping.
-- Escalations stop the run: a BLOCKED or FAILED report, design or intent findings (→ `refine`), a third fix cycle.
+- Escalations stop the run: a BLOCKED or FAILED report (→ `refine` when the fix changes the design or plan), design or intent findings (→ `refine`), a third fix cycle.
 - Verify findings for implementation go back to apply, then verify again; `pass` → ground, which closes the change.

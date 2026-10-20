@@ -202,14 +202,14 @@ footer a { margin-right: 16px; }
 <h2 id="flow">Как идёт работа</h2>
 
 <figure class="shot"><a href="../img/ru/flow.png"><img src="../img/ru/flow.png" alt="Цикл SlimSpec: explore, гейт, plan, гейт, apply, verify, ground. Verify возвращает баги реализации в apply как исправления, а вопросы к дизайну в refine; refine правит explore.md и отправляет инвалидированные задачи обратно в apply" loading="lazy"></a></figure>
-<p><code>refine</code> правит <code>explore.md</code> и отправляет инвалидированные задачи обратно в <code>apply</code>. Галя, отмена, но не всего чека, а только задетых позиций.</p>
+<p><code>refine</code> правит <code>explore.md</code> и <code>tasks.md</code> и отправляет инвалидированные задачи обратно в <code>apply</code>. Галя, отмена, но не всего чека, а только задетых позиций. Запускается по замечаниям к дизайну из verify или когда задача в apply упёрлась в ошибку дизайна или плана.</p>
 
 <dl class="phases">
   <dt>explore</dt><dd>Агент-сканер читает спеки модулей, потом код, и возвращает короткую сводку. Основная сессия задаёт вам вопросы (одно решение на вопрос, независимые вместе) и пишет <code>explore.md</code>. К плану сама не переходит. Готовьтесь, что вашей же идее зададут больше неудобных вопросов, чем вы планировали. В этом и смысл.</dd>
   <dt>plan</dt><dd>Планировщик пишет <code>tasks.md</code> волнами и делит каждую волну на дорожки из связанных задач. Дорожки одной волны трогают непересекающиеся файлы и идут параллельно. У каждой задачи указан первый падающий тест.</dd>
-  <dt>apply</dt><dd>На каждую дорожку свой исполнитель: он проходит её задачи по порядку и по каждой приносит доказательства red и green. Полный набор тестов гоняется после каждой волны, чтобы дорожки, зелёные поодиночке, не сломались вместе незаметно.</dd>
+  <dt>apply</dt><dd>На каждую дорожку свой исполнитель: он проходит её задачи по порядку и по каждой приносит доказательства red и green. Полный набор тестов гоняется после каждой волны, чтобы дорожки, зелёные поодиночке, не сломались вместе незаметно. Если задача упёрлась в дизайн или план (не хватает решения, не те файлы, в задуманном виде не сделать), вопрос приходит к вам через <code>refine</code>, и apply продолжает.</dd>
   <dt>verify</dt><dd>Ревьюер сверяет результат с планом и дизайном, проверяет доказательства TDD и сам код. Баги уходят обратно в apply, вопросы к дизайну приходят к вам через <code>refine</code>.</dd>
-  <dt>ground</dt><dd>Из изменения выделяются долговременные знания (поведение, инварианты, контракты, решения), и модель вливает их в спеки затронутых модулей. Поиск по ключевым словам для слияния не используется. После этого папка изменения удаляется.</dd>
+  <dt>ground</dt><dd>Из изменения выделяются долговременные знания (поведение, инварианты, контракты, решения), и модель вливает их в спеки затронутых модулей. Поиск по ключевым словам для слияния не используется. После этого удаляется папка изменения <code>.slimspec/changes/&lt;slug&gt;/</code>; <code>.slimspec/</code> и конфиг остаются.</dd>
 </dl>
 <figure class="shot"><a href="../img/ru/waves-lanes.png"><img src="../img/ru/waves-lanes.png" alt="tasks.md разбит на волны; каждая волна делится на параллельные дорожки из связанных задач с непересекающимися файлами, на дорожку один implementer" loading="lazy"></a></figure>
 
@@ -293,8 +293,26 @@ apply:
   agents: 3               <span class="cmt"># максимум параллельных implementer = максимум дорожек в волне</span>
 review:
   depth: auto             <span class="cmt"># auto (по режиму) | low | medium | high</span>
-models: {}                <span class="cmt"># переопределения по ролям</span></code></pre>
-<p class="note">Модели по умолчанию: scanner и implementer на sonnet, planner, reviewer и grounder на opus. Дорогим моделям достаётся думать, дешёвым печатать. При <code>commit: lane</code> или <code>wave</code> коммитит только основная сессия, агенты никогда. <span class="name">SlimSpec</span> никогда не пушит, и это не недоделка.</p>
+models: {}                <span class="cmt"># переопределения по ролям, см. ниже</span></code></pre>
+<p><code>models</code> задаёт модель агента каждой фазы, ключ — роль: <code>haiku | sonnet | opus</code>. Неуказанные ключи остаются по умолчанию.</p>
+<div class="table-scroll">
+<table>
+  <thead><tr><th>Фаза</th><th>Роль (ключ <code>models</code>)</th><th>По умолчанию</th></tr></thead>
+  <tbody>
+    <tr><td><code>explore</code> (medium, full)</td><td><code>scanner</code></td><td>sonnet</td></tr>
+    <tr><td><code>plan</code> (medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
+    <tr><td><code>refine</code> (структурное перепланирование, medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
+    <tr><td><code>apply</code></td><td><code>implementer</code></td><td>sonnet</td></tr>
+    <tr><td><code>verify</code></td><td><code>reviewer</code></td><td>opus</td></tr>
+    <tr><td><code>ground</code></td><td><code>grounder</code></td><td>opus</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Вопросы, гейты, разбор замечаний и остальная часть refine идут в основной сессии, на модели вашей сессии. В <code>fast</code> там же, без агентов, идут explore и plan.</p>
+<pre><code>models:
+  implementer: opus       <span class="cmt"># код сложнее обычного</span>
+  scanner: haiku          <span class="cmt"># небольшой репозиторий с хорошими спеками</span></code></pre>
+<p class="note">Дорогим моделям достаётся думать, дешёвым печатать. При <code>commit: lane</code> или <code>wave</code> коммитит только основная сессия, агенты никогда. <span class="name">SlimSpec</span> никогда не пушит, и это не недоделка.</p>
 
 </main>
 
