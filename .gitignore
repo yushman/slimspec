@@ -2,3 +2,5 @@
 /shelf/
 /.idea
 *.iml
+.slimspec/changes/
+evals/results/

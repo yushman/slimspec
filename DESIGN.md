@@ -3,7 +3,7 @@
 ## Goal
 
 A lightweight spec-driven development framework for Claude Code, shipped as a plugin of
-skills and agent definitions only (no scripts). It keeps what works in OpenSpec
+skills and agent definitions only (no scripts run by the plugin). It keeps what works in OpenSpec
 and Superpowers — an explore → plan → apply loop, specs as artifacts, mandatory red-green
 TDD — and drops what slows them down: long multi-step flows, artifact sprawl,
 keyword-based spec merging, brainstorming that always pushes toward a plan, and
@@ -21,7 +21,7 @@ Success looks like:
 ## Non-goals
 
 - Support for agents other than Claude Code.
-- A CLI, daemon, hooks or scripts.
+- A CLI, daemon, hooks or scripts run by the plugin.
 - Persistent change history inside the repo (commits and grounded specs are the history).
 - Up-front spec generation for a whole project.
 
@@ -278,6 +278,19 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 - **Rejected:** strictly one question per turn — slow, no gain when answers are independent; one
   big question mixing decisions — unanswerable options.
 
+### D24. Three-tier dev checks
+- **Context:** prompts change often and nothing verified them; the plugin itself must stay text-only.
+- **Choice:** three dev-only tiers, each owning one layer and none repeating another's checks. Fast
+  (`tests/`, python3 unittest, run by `.githooks/pre-commit`): static structure, artifact grammar,
+  English-only prompts; never model behavior. Medium (`evals/`, `sh evals/run.sh`): headless runs on a
+  fixture repo, behavior outcomes observable from files, git state, fixture tests and the trace; never
+  frontmatter or interaction wording. Slow (`/prompt-debate`, `.claude/`): wording of rules only a live
+  user can observe; never structure or outcomes. Dev tooling is never loaded or run by the plugin: Claude
+  Code loads only `skills/` and `agents/`, and since the marketplace source is the repo root, installs
+  carry `tests/`, `evals/`, `.githooks/` as inert files.
+- **Rejected:** overlapping checks across tiers — duplicate failures and drift; moving the plugin into a
+  subdirectory source to keep dev files out of installs — large path move for files the plugin never loads.
+
 ## Artifacts
 
 ### explore.md
@@ -363,4 +376,8 @@ slimspec/
     implementer.md
     reviewer.md
     grounder.md
+  tests/        # fast tier, dev only
+  evals/        # medium tier, dev only
+  .githooks/    # pre-commit running the fast tier
+  .claude/      # slow tier: /prompt-debate and its agents
 ```

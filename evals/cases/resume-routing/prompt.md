@@ -1,0 +1,1 @@
+Run `/slimspec add-mul`. The change folder `.slimspec/changes/add-mul/` already holds an approved explore.md. Continue the workflow from it, and stop at the plan gate: write tasks.md, then stop. Do not implement anything. No user is available; every answer is: proceed.
