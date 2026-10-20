@@ -21,16 +21,16 @@ class SkillsTest(unittest.TestCase):
         self.assertTrue(plugin.check_skill("x", "---\nname: x\n---\n"))
 
     def test_layout_parse_ignores_top_level(self):
-        design = "## Layout\n\n```\nslimspec/\n  skills/\n    a/  # c\n    b/\n  agents/\n    x.md\n  tests/\n```\n"
+        design = "## Layout\n\n```\nslimspec/\n  plugin/\n    skills/\n      a/  # c\n      b/\n    agents/\n      x.md\n  tests/\n```\n"
         self.assertEqual(plugin.layout_skill_dirs(design), {"a", "b"})
 
     def test_repo_skills(self):
-        base = os.path.join(plugin.ROOT, "skills")
+        base = os.path.join(plugin.PLUGIN, "skills")
         dirs = sorted(d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)))
         layout = plugin.layout_skill_dirs(plugin.read("DESIGN.md"))
         self.assertEqual(plugin.check_skill_dirs(dirs, layout), [])
         for d in dirs:
-            self.assertEqual(plugin.check_skill(d, plugin.read("skills", d, "SKILL.md")), [], d)
+            self.assertEqual(plugin.check_skill(d, plugin.read("plugin", "skills", d, "SKILL.md")), [], d)
 
 
 if __name__ == "__main__":

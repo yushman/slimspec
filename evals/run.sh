@@ -16,7 +16,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-cmd=${SLIMSPEC_EVAL_CMD:-"claude -p --plugin-dir $root --output-format stream-json --verbose --allowedTools Read,Glob,Grep,Write,Edit,Agent,Skill,Bash"}
+cmd=${SLIMSPEC_EVAL_CMD:-"claude -p --plugin-dir $root/plugin --output-format stream-json --verbose --allowedTools Read,Glob,Grep,Write,Edit,Agent,Skill,Bash"}
 stamp=$(date -u +%Y-%m-%dT%H-%M-%S)
 results=$here/results/$stamp
 mkdir -p "$results"

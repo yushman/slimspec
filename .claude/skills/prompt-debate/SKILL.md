@@ -1,13 +1,13 @@
 ---
 name: prompt-debate
-description: Debate a diff of skills/, agents/ and DESIGN.md against the live-user interaction checklist. Use before committing prompt changes. Usage - /prompt-debate [ref]
+description: Debate a diff of plugin/skills/, plugin/agents/ and DESIGN.md against the live-user interaction checklist. Use before committing prompt changes. Usage - /prompt-debate [ref]
 ---
 
 Review whether a prompt diff weakens the rules of live-user interaction. Never edit prompts.
 
 ## 1. Diff
 
-`ref` is the argument, default `HEAD`. Run `git diff <ref> -- skills/ agents/ DESIGN.md`. If it is empty, report an empty diff and stop.
+`ref` is the argument, default `HEAD`. Run `git diff <ref> -- plugin/skills/ plugin/agents/ DESIGN.md`. If it is empty, report an empty diff and stop.
 
 ## 2. Rounds
 

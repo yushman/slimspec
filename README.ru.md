@@ -27,7 +27,7 @@
 
 ```bash
 git clone https://github.com/yushman/slimspec ~/src/slimspec
-claude --plugin-dir ~/src/slimspec
+claude --plugin-dir ~/src/slimspec/plugin
 ```
 
 Внутри только скиллы и описания агентов. Ни скриптов, ни хуков, ни CLI, так что ломаться тут почти нечему.

@@ -49,7 +49,7 @@ an explicit gate on the written `explore.md` and shows the whole `tasks.md` at t
 
 ### D1. Claude Code only, packaged as a plugin
 - **Context:** portability would require abstracting subagents and questions.
-- **Choice:** Claude Code plugin with `skills/` and `agents/`.
+- **Choice:** Claude Code plugin with `skills/` and `agents/` (in `plugin/`).
 - **Rejected:** multi-agent support (Codex, Cursor) — much more complexity for the first version.
 
 ### D2. The main session is the single source of context
@@ -285,11 +285,11 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
   English-only prompts; never model behavior. Medium (`evals/`, `sh evals/run.sh`): headless runs on a
   fixture repo, behavior outcomes observable from files, git state, fixture tests and the trace; never
   frontmatter or interaction wording. Slow (`/prompt-debate`, `.claude/`): wording of rules only a live
-  user can observe; never structure or outcomes. Dev tooling is never loaded or run by the plugin: Claude
-  Code loads only `skills/` and `agents/`, and since the marketplace source is the repo root, installs
-  carry `tests/`, `evals/`, `.githooks/` as inert files.
-- **Rejected:** overlapping checks across tiers — duplicate failures and drift; moving the plugin into a
-  subdirectory source to keep dev files out of installs — large path move for files the plugin never loads.
+  user can observe; never structure or outcomes. Dev tooling is never loaded or run by the plugin: the
+  plugin lives in `plugin/` (marketplace `source: "./plugin"`), so installs carry only the plugin; dev
+  tooling stays at the repo root and is never shipped.
+- **Rejected:** overlapping checks across tiers — duplicate failures and drift; repo-root marketplace
+  source — installs carried all dev files.
 
 ## Artifacts
 
@@ -355,27 +355,30 @@ Spec formats:
 
 ```
 slimspec/
-  .claude-plugin/plugin.json
-  skills/
-    slimspec/   # router: config, mode, orchestration, resume
-    fast/       # /slimspec:fast — router entry with mode pinned
-    medium/
-    full/
-    explore/
-    plan/
-    apply/
-    verify/
-    refine/
-    ground/
-    init/       # /slimspec:init — interactive config setup
-    migrate-openspec/     # /slimspec:migrate-openspec — shared migration flow and agent prompts
-    migrate-superpowers/  # /slimspec:migrate-superpowers — source rules, uses the flow above
-  agents/
-    scanner.md
-    planner.md
-    implementer.md
-    reviewer.md
-    grounder.md
+  .claude-plugin/marketplace.json
+  plugin/
+    .claude-plugin/plugin.json
+    skills/
+      slimspec/   # router: config, mode, orchestration, resume
+      fast/       # /slimspec:fast — router entry with mode pinned
+      medium/
+      full/
+      explore/
+      plan/
+      apply/
+      verify/
+      refine/
+      ground/
+      init/       # /slimspec:init — interactive config setup
+      migrate-openspec/     # /slimspec:migrate-openspec — shared migration flow and agent prompts
+      migrate-superpowers/  # /slimspec:migrate-superpowers — source rules, uses the flow above
+    agents/
+      scanner.md
+      planner.md
+      implementer.md
+      reviewer.md
+      grounder.md
+  DESIGN.md, CLAUDE.md, README*, docs/
   tests/        # fast tier, dev only
   evals/        # medium tier, dev only
   .githooks/    # pre-commit running the fast tier

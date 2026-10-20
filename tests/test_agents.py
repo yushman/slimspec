@@ -28,11 +28,11 @@ class AgentsTest(unittest.TestCase):
 
     def test_repo_agents(self):
         tiers = plugin.design_tiers(plugin.read("DESIGN.md"))
-        files = sorted(os.listdir(os.path.join(plugin.ROOT, "agents")))
+        files = sorted(os.listdir(os.path.join(plugin.PLUGIN, "agents")))
         self.assertEqual(len(files), 5, files)
         self.assertEqual(sorted(f[:-3] for f in files), sorted(tiers))
         for f in files:
-            self.assertEqual(plugin.check_agent(f, plugin.read("agents", f), tiers), [], f)
+            self.assertEqual(plugin.check_agent(f, plugin.read("plugin", "agents", f), tiers), [], f)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ Medium dev-check tier: headless runs of the plugin on a fixture repo, checking t
 
 ## Runner
 - `sh evals/run.sh [--case <name>] [--runs N]` (default 3 runs) runs each case N times and exits 1 if any case fails; a bad argument exits 2.
-- Host command comes from `SLIMSPEC_EVAL_CMD`, default `claude -p --plugin-dir <repo root> --output-format stream-json --verbose --allowedTools Read,Glob,Grep,Write,Edit,Agent,Skill,Bash`; the prompt is its last argument and model pinning goes into the command. Non-Claude hosts load the plugin themselves.
+- Host command comes from `SLIMSPEC_EVAL_CMD`, default `claude -p --plugin-dir <repo root>/plugin --output-format stream-json --verbose --allowedTools Read,Glob,Grep,Write,Edit,Agent,Skill,Bash`; the prompt is its last argument and model pinning goes into the command. Non-Claude hosts load the plugin themselves.
 - Each run gets a fresh `mktemp` sandbox: a copy of `fixture/` (a tiny Python `calc` package tested with `python3 -m unittest`) plus the case `seed/`, `git init` with one initial commit, and the host runs from there. `Bash` is not confined to the sandbox — accepted.
 - Logs, `check.json` and the sandbox path of each run go to `evals/results/<timestamp>/<case>/<run>/`, which is git-ignored. No baseline or pass rate is recorded.
 

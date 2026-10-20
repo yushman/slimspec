@@ -41,9 +41,9 @@ class RefsTest(unittest.TestCase):
 
     def test_repo_paths_resolve(self):
         problems = []
-        for f in plugin.md_files("skills", "agents"):
+        for f in plugin.md_files("plugin/skills", "plugin/agents"):
             with open(f, encoding="utf-8") as fh:
-                problems += plugin.check_paths(f, fh.read(), plugin.ROOT)
+                problems += plugin.check_paths(f, fh.read(), plugin.PLUGIN)
         self.assertEqual(problems, [])
 
 
@@ -52,7 +52,7 @@ class AgentRefsTest(unittest.TestCase):
     SKILLS = {"apply"}
 
     def check(self, text):
-        return plugin.check_agent_refs("skills/x/SKILL.md", text, self.AGENTS, self.SKILLS)
+        return plugin.check_agent_refs("plugin/skills/x/SKILL.md", text, self.AGENTS, self.SKILLS)
 
     def test_flags_unknown_agent(self):
         problems = self.check("a\nLaunch `slimspec:ghost` now")
@@ -67,11 +67,11 @@ class AgentRefsTest(unittest.TestCase):
         self.assertEqual(self.check(text), [])
 
     def test_repo_agent_refs(self):
-        base = os.path.join(plugin.ROOT, "skills")
+        base = os.path.join(plugin.PLUGIN, "skills")
         skills = {d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d))}
-        agents = {f[:-3] for f in os.listdir(os.path.join(plugin.ROOT, "agents"))}
+        agents = {f[:-3] for f in os.listdir(os.path.join(plugin.PLUGIN, "agents"))}
         problems = []
-        for f in plugin.md_files("skills"):
+        for f in plugin.md_files("plugin/skills"):
             with open(f, encoding="utf-8") as fh:
                 problems += plugin.check_agent_refs(f, fh.read(), agents, skills)
         self.assertEqual(problems, [])

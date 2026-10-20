@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "slimspec",
-      "source": "./",
+      "source": "./plugin",
       "description": "Explore, plan, apply, verify, ground with red-green TDD and specs as module CLAUDE.md files.",
       "category": "development",
       "homepage": "https://github.com/yushman/slimspec",

@@ -16,14 +16,14 @@ def example_problems(path, text):
 
 class ExamplesTest(unittest.TestCase):
     def test_slimspec_examples_has_explore_and_both_tasks_blocks(self):
-        path = os.path.join(ROOT, "skills", "slimspec", "examples.md")
+        path = os.path.join(ROOT, "plugin", "skills", "slimspec", "examples.md")
         with open(path, encoding="utf-8") as f:
             kinds = [k for k, _ in grammar.check_markdown(f.read())]
         self.assertEqual(kinds.count("explore"), 1)
         self.assertEqual(kinds.count("tasks"), 2)
 
     def test_all_examples_pass_grammar(self):
-        files = sorted(glob.glob(os.path.join(ROOT, "skills", "*", "examples.md")))
+        files = sorted(glob.glob(os.path.join(ROOT, "plugin", "skills", "*", "examples.md")))
         self.assertTrue(files)
         problems = []
         for path in files:
@@ -36,7 +36,7 @@ class ExamplesTest(unittest.TestCase):
         self.assertEqual(grammar.check_markdown(text), [])
 
     def test_broken_copy_reported_with_file_and_line(self):
-        path = os.path.join(ROOT, "skills", "slimspec", "examples.md")
+        path = os.path.join(ROOT, "plugin", "skills", "slimspec", "examples.md")
         with open(path, encoding="utf-8") as f:
             text = f.read()
         broken = text.replace("## Risks", "## Dangers", 1)

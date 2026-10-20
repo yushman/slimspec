@@ -2,6 +2,7 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PLUGIN = os.path.join(ROOT, "plugin")
 
 
 def read(*parts):
@@ -52,8 +53,8 @@ def check_agent(filename, text, tiers):
 def layout_skill_dirs(design):
     m = re.search(r"## Layout\n+```\n(.*?)\n```", design, re.S)
     block = m.group(1)
-    sk = re.search(r"^  skills/\n(.*?)(?=^  \S)", block + "\n  end", re.S | re.M)
-    return set(re.findall(r"^    ([\w-]+)/", sk.group(1), re.M))
+    sk = re.search(r"^    skills/\n(.*?)(?=^    \S|^  \S)", block + "\n  end", re.S | re.M)
+    return set(re.findall(r"^      ([\w-]+)/", sk.group(1), re.M))
 
 
 def check_skill_dirs(actual, layout):

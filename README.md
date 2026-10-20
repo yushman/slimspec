@@ -27,7 +27,7 @@ Or load a local clone:
 
 ```bash
 git clone https://github.com/yushman/slimspec ~/src/slimspec
-claude --plugin-dir ~/src/slimspec
+claude --plugin-dir ~/src/slimspec/plugin
 ```
 
 Inside there are only skills and agent definitions. No scripts, no hooks, no CLI, so there isn't much left to break.

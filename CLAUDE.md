@@ -1,6 +1,6 @@
 # SlimSpec
 
-Claude Code plugin: skills and agent definitions only, no scripts run by the plugin.
+Claude Code plugin: skills and agent definitions only, no scripts run by the plugin. The plugin lives in `plugin/` (`skills/`, `agents/`); dev tooling at the repo root is not shipped.
 
 - Design and all decisions: `DESIGN.md` (decisions D1–D24). Follow them; change a decision there before changing behavior.
 - Skill and agent prompts are in English.
