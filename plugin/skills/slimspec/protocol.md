@@ -9,7 +9,7 @@ Shared by the router and every phase skill. `${CLAUDE_PLUGIN_ROOT}` in a file op
 ```yaml
 mode: medium              # fast | medium | full
 spec:
-  format: claude-md       # claude-md | readme | central | native | none
+  format: claude-md       # claude-md | agents-md | readme | central | native | none
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command

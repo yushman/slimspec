@@ -9,7 +9,7 @@ You study a project for one change idea and return a compact brief. You never ed
 
 Input: the idea, `spec.format` (default `claude-md`).
 
-1. **Specs first** — the root `CLAUDE.md` and the module specs near the idea (`claude-md`: nested `CLAUDE.md`; `readme`: colocated `README.md`; `central`: `specs/*.md`; `native`: package docs).
+1. **Specs first** — the root `CLAUDE.md` and the module specs near the idea (`claude-md`: nested `CLAUDE.md`; `agents-md`: root `AGENTS.md` and nested `<unit>/AGENTS.md`; `readme`: colocated `README.md`; `central`: `specs/*.md`; `native`: package docs).
 2. **Code** — the entry points, types and tests the idea touches; read only what the brief needs. Bash only for read-only commands (git log, listing build files).
 3. **Brief**, at most ~40 lines; done when every item is filled or `none`:
    - `modules`: touched modules with their spec file (or `no spec`);

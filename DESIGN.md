@@ -3,7 +3,9 @@
 ## Goal
 
 A lightweight spec-driven development framework for Claude Code, shipped as a plugin of
-skills and agent definitions only (no scripts run by the plugin). It keeps what works in OpenSpec
+skills and agent definitions only (no scripts run by the plugin). OpenCode, Codex and ZCode run
+the same core through host mapping files and pointer agents installed by `install.sh`, the only
+script, which lives outside `plugin/`. It keeps what works in OpenSpec
 and Superpowers — an explore → plan → apply loop, specs as artifacts, mandatory red-green
 TDD — and drops what slows them down: long multi-step flows, artifact sprawl,
 keyword-based spec merging, brainstorming that always pushes toward a plan, and
@@ -20,7 +22,7 @@ Success looks like:
 
 ## Non-goals
 
-- Support for agents other than Claude Code.
+- Native plugins or marketplace entries for hosts other than Claude Code, and hosts beyond Claude Code, OpenCode, Codex and ZCode.
 - A CLI, daemon, hooks or scripts run by the plugin.
 - Persistent change history inside the repo by default (commits and grounded specs are the history;
   `changes.closed: archive` keeps closed changes as an opt-in, D27).
@@ -50,10 +52,10 @@ an explicit gate on the written `explore.md` and shows the whole `tasks.md` at t
 
 ## Decisions
 
-### D1. Claude Code only, packaged as a plugin
-- **Context:** portability would require abstracting subagents and questions.
-- **Choice:** Claude Code plugin with `skills/` and `agents/` (in `plugin/`).
-- **Rejected:** multi-agent support (Codex, Cursor) — much more complexity for the first version.
+### D1. Claude plugin core, host mapping for other hosts
+- **Context:** the prompts use Claude Code terms (plugin root, `AskUserQuestion`, `Agent` launches); a neutral rewrite would touch every file.
+- **Choice:** the core stays a Claude Code plugin with `skills/` and `agents/` (in `plugin/`). Other hosts (OpenCode, Codex, ZCode) get mapping files and shims, not a rewrite (D28).
+- **Rejected:** a neutral rewrite with a host table in the protocol — many files and Claude regression risk; conversion at install — fragile regexes.
 
 ### D2. The main session is the single source of context
 - **Context:** the user steers decisions; subagents start cold.
@@ -146,9 +148,9 @@ affected tasks `invalidated`, and sends only those back to apply. Approval reset
 ### D11. Specs are nested module `CLAUDE.md` files
 - **Choice:** Claude Code auto-loads nested `CLAUDE.md` files when working inside a
   directory, so specs reach the agent's context without extra steps.
-- **Rejected:** `AGENTS.md` (not auto-loaded natively; symlinks or `@import` add noise);
+- **Rejected:** `AGENTS.md` as the default (not auto-loaded natively by Claude Code; symlinks or `@import` add noise);
   colocated `README.md` (not auto-loaded); a central `specs/` folder (detached from code).
-- Other formats remain configurable (see Config).
+- Other formats remain configurable (see Config). Off Claude the default is `agents-md` (`<unit>/AGENTS.md`), the file the other hosts load.
 
 ### D12. Grounding: distill, AI-merge, check intent
 1. Extract only durable knowledge from `explore.md` and the diff: behavior, invariants,
@@ -187,11 +189,11 @@ directly. `/slimspec:fast`, `/slimspec:medium` and `/slimspec:full <idea>` start
 in a fixed mode and skip the mode suggestion. `/slimspec:debug [mode] <bug>` starts a bug fix
 in place of explore (D25). Plain `/slimspec` takes the mode from config;
 after the scan, the router suggests a mode based on the size of the change and the user
-confirms.
+confirms. Off Claude, `/slimspec:<phase|mode>` reads as `slimspec <phase|mode> <args>`, a direct call of that skill (D28).
 
 ### D16. Model tier per role
 scanner — sonnet, debugger — opus, planner — opus, implementer — sonnet, reviewer — opus,
-grounder — opus. Set in agent frontmatter and overridable in config.
+grounder — opus. Set in agent frontmatter and overridable in config. Off Claude, pointer agents carry no model and inherit the session's; `models.<role>` is passed at spawn only where the host supports it.
 
 ### D17. `tasks.md` is semi-strict markdown
 Fixed: the `base:` / `fix-cycles:` header lines, checkboxes, task ids, wave headings with their
@@ -351,6 +353,11 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
   keeping closed changes in `changes/` with a closed marker — every listing, resume and state check would
   have to filter them, and the folder grows without bound.
 
+### D28. Other hosts: mapping files, one stub, pointer agents, `install.sh`
+- **Context:** OpenCode, Codex and ZCode have no plugin namespace and no access to a plugin root; `plugin/**` is Claude-shaped.
+- **Choice:** `plugin/**` prose stays as is. `hosts/{opencode,codex,zcode}.md` map Claude terms (plugin root, `AskUserQuestion`, `slimspec:<role>` launches, `/code-review`, `/slimspec:<phase>`) to the host; one stub skill `hosts/skill/SKILL.md` named `slimspec` identifies the host and loads its mapping, then the router. Per-host pointer agents `slimspec-<role>` (`hosts/<host>/agents/`) read `agents/<role>.md` from the install root, with read-only limits for scanner and reviewer. `install.sh` (POSIX sh, `curl | sh`, tag tarball) copies the plugin files and `hosts/*.md` to a data dir, substitutes `<root>` into the stub and agents, and uninstalls only what it wrote. Questions go through the host's question tool or a text question that ends the turn. Migrate skills stay Claude-only.
+- **Rejected:** a neutral rewrite (D1); one stub per host — duplicate `slimspec` skills; an npm CLI — publishing pipeline and node; host marketplaces — no way to load the mapping.
+
 ## Artifacts
 
 ### explore.md
@@ -388,7 +395,7 @@ added by verify when no task owns the finding).
 ```yaml
 mode: medium              # fast | medium | full
 spec:
-  format: claude-md       # claude-md | readme | central | native | none
+  format: claude-md       # claude-md | agents-md | readme | central | native | none
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
@@ -405,6 +412,7 @@ models: {}                # per-role overrides
 
 Spec formats:
 - `claude-md` — nested `CLAUDE.md` (default, auto-loaded);
+- `agents-md` — nested `AGENTS.md`, root `AGENTS.md` (default off Claude);
 - `readme` — colocated `README.md`;
 - `central` — `specs/<capability>.md`, for features that cut across modules;
 - `native` — language-native module docs (Go `doc.go`, Rust `//!`, Python package
@@ -443,6 +451,8 @@ slimspec/
       implementer.md
       reviewer.md
       grounder.md
+  hosts/        # OpenCode, Codex, ZCode: mapping files, stub skill, pointer agents
+  install.sh    # the only script; installs hosts/ shims, not run by the plugin
   DESIGN.md, CLAUDE.md, README*, docs/
   tests/        # fast tier, dev only
   evals/        # medium tier, dev only

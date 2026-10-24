@@ -4,3 +4,5 @@
 *.iml
 .slimspec/changes/
 evals/results/
+
+.tmp/

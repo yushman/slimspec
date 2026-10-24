@@ -32,6 +32,23 @@ claude --plugin-dir ~/src/slimspec/plugin
 
 Inside there are only skills and agent definitions. No scripts, no hooks, no CLI, so there isn't much left to break.
 
+### OpenCode, Codex, ZCode
+
+Untested until the smoke passes: all three hosts. Written against Codex CLI 0.154.0; OpenCode and ZCode docs as of 2026-10 (no tested version).
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh | sh -s -- <host>
+```
+
+`<host>` is one of `opencode`, `codex`, `zcode`, `all`.
+
+- To read the script first: `curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh -o install.sh`, look at it, then `sh install.sh codex`.
+- `--project` installs into the current project (`.opencode/agents/`, `.codex/agents/`, `.agents/skills/`, data in `.slimspec/install/`). It is per machine (absolute paths): every written path is added to `.gitignore`, and each teammate runs the installer. ZCode is global only: `zcode --project` fails, `all --project` skips ZCode.
+- `--version <tag>` installs that tag instead of the version of the script.
+- Update = rerun the installer. Remove = rerun it with `--uninstall`; only the files it wrote are deleted.
+- Usage: `$slimspec <phase|mode> <idea>`, e.g. `$slimspec fast add a --verbose flag`, or the host's own way to invoke a skill named `slimspec`. Specs are written as `AGENTS.md` by default (`spec.format: agents-md`). The migrate skills are Claude Code only.
+- OpenCode also reads `~/.claude/skills`: if you also keep a user-level copy in `~/.claude/skills/slimspec`, `slimspec` may show up twice.
+
 ## Why
 
 Spec-driven development made sense when models were weaker. Context was small, there were no subagents, and every new session started like a new hire who skipped onboarding. So you wrote everything down, committed the paper, and the next session read it. OpenSpec and Superpowers came out of that era, and their best idea, design before plan, is still here.
@@ -210,7 +227,7 @@ Optional. Without a config every key has a default; if you don't want to configu
 ```yaml
 mode: medium              # fast | medium | full
 spec:
-  format: claude-md       # claude-md | readme | central | native | none
+  format: claude-md       # claude-md | agents-md | readme | central | native | none
   unit: auto              # auto (by build files) | dir glob, e.g. "src/*/"
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command

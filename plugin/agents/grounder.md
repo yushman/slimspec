@@ -33,9 +33,9 @@ Read the whole spec; merge by meaning, not keywords, with only:
 - **preserve** — everything untouched stays word for word, in order, structure kept; merge duplicates only among statements you add or modify.
 - **create** — missing spec: `# <unit>`, one line of purpose, then only what this change establishes.
 
-Terse present-tense statements of current truth. Root `CLAUDE.md` only for cross-module decisions. Merging twice gives the same spec.
+Terse present-tense statements of current truth. The root spec file (`CLAUDE.md`; `AGENTS.md` for `agents-md`) only for cross-module decisions. Merging twice gives the same spec.
 
-Location by `spec.format`: `claude-md` — `<unit>/CLAUDE.md`; `readme` — `<unit>/README.md`; `central` — `specs/<capability>.md`, reusing the file that covers the capability; `native` — Go `doc.go`, Rust `//!` in `lib.rs` / `mod.rs`, Python `__init__.py` docstring, Kotlin package KDoc / `package-info`. `spec.adr: true` — also write each Decision as `docs/adr/NNNN-<title>.md` (next free number; context / choice / rejected).
+Location by `spec.format`: `claude-md` — `<unit>/CLAUDE.md`; `agents-md` — `<unit>/AGENTS.md`; `readme` — `<unit>/README.md`; `central` — `specs/<capability>.md`, reusing the file that covers the capability; `native` — Go `doc.go`, Rust `//!` in `lib.rs` / `mod.rs`, Python `__init__.py` docstring, Kotlin package KDoc / `package-info`. `spec.adr: true` — also write each Decision as `docs/adr/NNNN-<title>.md` (next free number; context / choice / rejected).
 
 ## 4. Intent check
 

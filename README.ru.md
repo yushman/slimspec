@@ -32,6 +32,23 @@ claude --plugin-dir ~/src/slimspec/plugin
 
 Внутри только скиллы и описания агентов. Ни скриптов, ни хуков, ни CLI, так что ломаться тут почти нечему.
 
+### OpenCode, Codex, ZCode
+
+Не проверено, пока не пройден smoke: все три хоста. Писалось под Codex CLI 0.154.0; для OpenCode и ZCode по документации на 2026-10 (проверенной версии нет).
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh | sh -s -- <host>
+```
+
+`<host>`: `opencode`, `codex`, `zcode` или `all`.
+
+- Сначала прочитать скрипт: `curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh -o install.sh`, посмотреть, потом `sh install.sh codex`.
+- `--project` ставит в текущий проект (`.opencode/agents/`, `.codex/agents/`, `.agents/skills/`, данные в `.slimspec/install/`). Установка привязана к машине (абсолютные пути): каждый записанный путь добавляется в `.gitignore`, каждый участник команды запускает установщик сам. ZCode только глобально: `zcode --project` падает, `all --project` пропускает ZCode.
+- `--version <tag>` ставит указанный тег вместо версии скрипта.
+- Обновление = повторный запуск установщика. Удаление = повторный запуск с `--uninstall`; удаляются только файлы, которые он записал.
+- Использование: `$slimspec <фаза|режим> <идея>`, например `$slimspec fast добавить флаг --verbose`, или способ хоста вызвать скилл `slimspec`. Спеки по умолчанию пишутся в `AGENTS.md` (`spec.format: agents-md`). Скиллы migrate работают только в Claude Code.
+- OpenCode читает и `~/.claude/skills`: если у вас есть и пользовательская копия `~/.claude/skills/slimspec`, `slimspec` может показаться дважды.
+
 ## Зачем
 
 Пока модели были послабее, SDD выручал. Контекст тесный, сабагентов нет, и каждая новая сессия открывала проект с лицом стажёра в первый рабочий день. Решение было простое: всё записать, записанное закоммитить, следующей сессии дать почитать. Так появились OpenSpec и Superpowers, и их лучшая находка, дизайн раньше плана, здесь осталась.
@@ -210,7 +227,7 @@ Planner делит каждую волну на дорожки из связан
 ```yaml
 mode: medium              # fast | medium | full
 spec:
-  format: claude-md       # claude-md | readme | central | native | none
+  format: claude-md       # claude-md | agents-md | readme | central | native | none
   unit: auto              # auto (по билд-файлам) | glob директорий, напр. "src/*/"
   adr: false              # дополнительно вести решения в docs/adr/NNNN-*.md
 test: auto                # или явная команда

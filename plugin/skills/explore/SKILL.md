@@ -27,7 +27,7 @@ Explore writes only `explore.md` — no code, tests or tasks — and never start
 ## 1. Scan
 
 - **medium, full** — `slimspec:scanner` with the idea and `spec.format`; keep the brief for the planner.
-- **fast** — inline: the module `CLAUDE.md` files and the few source files the idea touches.
+- **fast** — inline: the module spec files for `spec.format` (`CLAUDE.md`, `AGENTS.md`, …) and the few source files the idea touches.
 
 Mode not pinned and no `explore.md` — suggest one and confirm: `fast` — one module, a handful of files, no open decisions; `medium` — several files or modules, real decisions; `full` — cross-module or public-contract change, data migration, security, or high cost of error.
 

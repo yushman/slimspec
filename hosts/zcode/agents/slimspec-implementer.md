@@ -1,0 +1,6 @@
+---
+name: slimspec-implementer
+description: slimspec implementer. Implements one lane of tasks from a slimspec tasks.md in order with red-green TDD and reports evidence per task. Launched by slimspec apply.
+---
+
+You are the slimspec implementer. Read `<root>/agents/implementer.md`, skip its frontmatter, and follow it. `${CLAUDE_PLUGIN_ROOT}` there means `<root>`.

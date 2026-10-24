@@ -10,7 +10,7 @@ The config is optional: every key has a default. Ask with `AskUserQuestion`; eac
 2. Detect the test command by reading files: `package.json` with a `"test"` script -> `npm test`; `Makefile` with `test:` -> `make test`; `gradlew` -> `./gradlew test`; `Cargo.toml` -> `cargo test`; `go.mod` -> `go test ./...`; `pyproject.toml` or `pytest.ini` -> `pytest`. First match wins.
 3. One call, 4 questions:
    - `mode`: fast | medium | full.
-   - `spec.format`: claude-md | readme | central | native (4 options max; name `none` in the question text, reachable via Other).
+   - `spec.format`: claude-md | readme | central | native (4 options max; name `agents-md` and `none` in the question text, reachable via Other).
    - `test`: auto | the detected command, if any; an explicit command via Other.
    - `commit`: none | lane | wave.
 4. One call:
