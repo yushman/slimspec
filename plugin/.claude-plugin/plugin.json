@@ -1,6 +1,6 @@
 {
   "name": "slimspec",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Lightweight spec-driven development: explore, plan, apply, verify, ground with red-green TDD and specs as module CLAUDE.md files",
   "author": {
     "name": "yushman"
