@@ -10,7 +10,7 @@ Mapping of the Claude Code terms used in slimspec files. `<root>` is the slimspe
 
 ## Subagents
 
-An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means spawning the Codex subagent `slimspec-<role>` (defined in `~/.codex/agents/` or `.codex/agents/`). Roles: scanner, planner, implementer, reviewer, grounder. Codex roles are not sandboxed per agent; read-only roles follow their instructions not to edit files.
+An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means spawning the Codex subagent `slimspec-<role>` (defined in `~/.codex/agents/` or `.codex/agents/`). Roles: scanner, debugger, planner, implementer, reviewer, grounder. Codex roles are not sandboxed per agent; read-only roles follow their instructions not to edit files.
 
 ## Skills and commands
 

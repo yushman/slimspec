@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "install.sh"
-ROLES = ["scanner", "planner", "implementer", "reviewer", "grounder"]
+ROLES = ["scanner", "debugger", "planner", "implementer", "reviewer", "grounder"]
 CURL_STUB = """#!/bin/sh
 echo "$@" >> "$CURL_LOG"
 [ -z "${CURL_FAIL:-}" ] || exit 22

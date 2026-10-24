@@ -4,7 +4,7 @@ set -eu
 
 version=0.1.8
 usage='usage: install.sh opencode|codex|zcode|all [--project] [--version <tag>] [--uninstall]'
-roles='scanner planner implementer reviewer grounder'
+roles='scanner debugger planner implementer reviewer grounder'
 
 die() { echo "$usage" >&2; exit 2; }
 

@@ -4,7 +4,7 @@ import unittest
 
 import plugin
 
-ROLES = ["scanner", "planner", "implementer", "reviewer", "grounder"]
+ROLES = ["scanner", "debugger", "planner", "implementer", "reviewer", "grounder"]
 READ_ONLY = ["scanner", "reviewer"]
 
 
@@ -71,6 +71,12 @@ permission:
 
 Read `<root>/agents/scanner.md`, skip its frontmatter, and follow it. `${CLAUDE_PLUGIN_ROOT}` there means `<root>`.
 """
+
+
+class RolesTest(unittest.TestCase):
+    def test_roles_match_plugin_agents(self):
+        names = os.listdir(os.path.join(plugin.ROOT, "plugin", "agents"))
+        self.assertEqual(sorted(ROLES), sorted(n[:-3] for n in names if n.endswith(".md")))
 
 
 class OpenCodeAgentsTest(unittest.TestCase):

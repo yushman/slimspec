@@ -10,7 +10,7 @@ Mapping of the Claude Code terms used in slimspec files. `<root>` is the slimspe
 
 ## Subagents
 
-An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means launching the ZCode subagent `slimspec-<role>` (defined in `~/.zcode/agents/`). Roles: scanner, planner, implementer, reviewer, grounder.
+An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means launching the ZCode subagent `slimspec-<role>` (defined in `~/.zcode/agents/`). Roles: scanner, debugger, planner, implementer, reviewer, grounder.
 
 ## Skills and commands
 
