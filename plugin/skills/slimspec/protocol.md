@@ -14,6 +14,9 @@ spec:
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
 commit: none              # none | lane | wave
+changes:
+  closed: delete          # delete | archive (.slimspec/archive/<date>-<slug>/)
+  gitignore: true         # add .slimspec/changes/ and .slimspec/archive/ to .gitignore
 apply:
   agents: 3               # max parallel implementers = max lanes per wave
 review:
@@ -26,6 +29,8 @@ models: {}                # per-role overrides, e.g. {implementer: opus}
 ## Change folder
 
 `.slimspec/changes/<slug>/` (slug: kebab-case, 2–4 words of the title) holds `explore.md` and `tasks.md`; in `fast`, tasks are the `## Tasks` section of `explore.md` ("tasks" means either). A phase given no slug while several changes are active asks which. The mode is the `mode:` line of `explore.md`. Formats: [explore-template.md](explore-template.md), [tasks-template.md](tasks-template.md).
+
+Explore and debug create the folder only when writing `explore.md`, and then: `changes.gitignore: true` — make sure `.slimspec/changes/` (and `.slimspec/archive/` when `changes.closed: archive`) are lines of the project's `.gitignore` (append; create the file if missing; never touch other lines); `false` — never touch `.gitignore`. Closed changes in `.slimspec/archive/` are never listed, resumed or read.
 
 Next phase, from files only:
 
@@ -40,7 +45,7 @@ Next phase, from files only:
 
 You are the only decision-maker; agents only execute and report. The change files are the persisted snapshot of your context (for resume and gates) and the handoff medium to agents. Write anything decided in conversation that an agent needs to the files first, then launch. Prompts carry paths and ids — change folder, mode, resolved test command, the phase's inputs — never inlined artifact content; they add only what is not yet in files (e.g. the finding behind a `fix:`).
 
-Launch `slimspec:scanner | planner | implementer | reviewer | grounder` with the Agent tool (`subagent_type`; `model` from `models.<role>` when set). Each returns only a YAML report (`status: DONE | BLOCKED | FAILED`, `task`, `files`, `decisions`, `deviations`, `tdd`, `questions`, role fields) defined in its agent file. It stays in the session; the user never sees agent YAML, logs or diffs.
+Launch `slimspec:scanner | debugger | planner | implementer | reviewer | grounder` with the Agent tool (`subagent_type`; `model` from `models.<role>` when set). Each returns only a YAML report (`status: DONE | BLOCKED | FAILED`, `task`, `files`, `decisions`, `deviations`, `tdd`, `questions`, role fields) defined in its agent file. It stays in the session; the user never sees agent YAML, logs or diffs.
 
 - **DONE** — keep the report (compact); continue.
 - **BLOCKED** — ask its `questions`; relaunch the same agent with the original prompt plus the answers.
@@ -48,7 +53,7 @@ Launch `slimspec:scanner | planner | implementer | reviewer | grounder` with the
 
 ## Commits
 
-`none` (default) — never. `lane` — once per lane, after all its tasks are DONE, that lane's `files`. `wave` — once per wave, after its suite is green. Short imperative lowercase messages. Never push.
+`none` (default) — never. `lane` — once per lane, after all its tasks are DONE, that lane's `files`. `wave` — once per wave, after its suite is green. With `changes.gitignore: false`, lane and wave commits also include the change's `explore.md` and `tasks.md`. Short imperative lowercase messages. Never push.
 
 ## Asking the user
 

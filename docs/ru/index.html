@@ -209,7 +209,7 @@ footer a { margin-right: 16px; }
   <dt>plan</dt><dd>Планировщик пишет <code>tasks.md</code> волнами и делит каждую волну на дорожки из связанных задач. Дорожки одной волны трогают непересекающиеся файлы и идут параллельно. У каждой задачи указан первый падающий тест.</dd>
   <dt>apply</dt><dd>На каждую дорожку свой исполнитель: он проходит её задачи по порядку и по каждой приносит доказательства red и green. Полный набор тестов гоняется после каждой волны, чтобы дорожки, зелёные поодиночке, не сломались вместе незаметно. Если задача упёрлась в дизайн или план (не хватает решения, не те файлы, в задуманном виде не сделать), вопрос приходит к вам через <code>refine</code>, и apply продолжает.</dd>
   <dt>verify</dt><dd>Ревьюер сверяет результат с планом и дизайном, проверяет доказательства TDD и сам код. Баги уходят обратно в apply, вопросы к дизайну приходят к вам через <code>refine</code>.</dd>
-  <dt>ground</dt><dd>Из изменения выделяются долговременные знания (поведение, инварианты, контракты, решения), и модель вливает их в спеки затронутых модулей. Поиск по ключевым словам для слияния не используется. После этого удаляется папка изменения <code>.slimspec/changes/&lt;slug&gt;/</code>; <code>.slimspec/</code> и конфиг остаются.</dd>
+  <dt>ground</dt><dd>Из изменения выделяются долговременные знания (поведение, инварианты, контракты, решения), и модель вливает их в спеки затронутых модулей. Поиск по ключевым словам для слияния не используется. После этого папка изменения <code>.slimspec/changes/&lt;slug&gt;/</code> удаляется (или уходит в архив, см. «Конфиг»); <code>.slimspec/</code> и конфиг остаются.</dd>
 </dl>
 <figure class="shot"><a href="../img/ru/waves-lanes.png"><img src="../img/ru/waves-lanes.png" alt="tasks.md разбит на волны; каждая волна делится на параллельные дорожки из связанных задач с непересекающимися файлами, на дорожку один implementer" loading="lazy"></a></figure>
 
@@ -226,7 +226,7 @@ tdd:
 questions: []</code></pre>
 <p>Простыни тестовых логов в основную сессию не попадают, а каждое решение и каждый итог в ней есть.</p>
 <figure class="shot"><a href="../img/ru/main-session.png"><img src="../img/ru/main-session.png" alt="Основная сессия в центре принимает все решения; scanner, planner, несколько implementer, reviewer и grounder присылают ей короткие YAML-отчёты; вопрос BLOCKED идёт через основную сессию к пользователю, ответ возвращается агенту" loading="lazy"></a></figure>
-<p>Изменение живёт в <code>.slimspec/changes/&lt;slug&gt;/</code>: это <code>explore.md</code> и <code>tasks.md</code>. Папка в <code>.gitignore</code> и удаляется после ground. Историю хранят ваши коммиты и обновлённые спеки. Отряд не заметит потери бойца: всё ценное к этому моменту уже в спеках.</p>
+<p>Изменение живёт в <code>.slimspec/changes/&lt;slug&gt;/</code>: это <code>explore.md</code> и <code>tasks.md</code>. По умолчанию папка в <code>.gitignore</code> и удаляется после ground. Историю хранят ваши коммиты и обновлённые спеки. Отряд не заметит потери бойца: всё ценное к этому моменту уже в спеках.</p>
 <p>Ground ближе всего к классическому SDD. План и процесс выбрасываются: в какой волне шла T3, не понадобится уже никому. Остальное вливает агент, который понимает, зачем делалось изменение. Утверждение, которое противоречит изменению, он переписывает, а не подселяет к нему соседа, иначе спека постепенно превращается в ветку комментариев, спорящую сама с собой. Потом агент проверяет, что обновлённая спека покрывает цель изменения и не спорит с принятыми решениями. Результат ложится во вложенный <code>CLAUDE.md</code> модуля, и следующий агент, зайдя в модуль, найдёт спеку уже на месте.</p>
 <figure class="shot"><a href="../img/ru/ground.png"><img src="../img/ru/ground.png" alt="Ground: из изменения дистиллируются долговременные знания, модель вливает их в CLAUDE.md модуля, результат сверяется с намерением изменения, папка изменения удаляется" loading="lazy"></a></figure>
 <p>TDD проверяется по свидетельствам red/green, а не хуком. Verify не примет задачу без red-прогона, и падать red должен по делу: тест, упавший на отсутствующем импорте, ничего не доказывает. Ты не пройдёшь! Где TDD неприменим (конфиг, стили, миграции), у задачи стоит <code>test: none — &lt;причина&gt;</code> и альтернативная проверка, а все такие исключения видны на гейте плана. Затерять «тут тесты не нужны» в середине списка не выйдет.</p>
@@ -249,7 +249,9 @@ questions: []</code></pre>
 /slimspec:fast &lt;идея&gt;     <span class="cmt"># фиксированный режим, без предложения</span>
 /slimspec:medium &lt;идея&gt;
 /slimspec:full &lt;идея&gt;
+/slimspec:debug &lt;баг&gt;     <span class="cmt"># сначала первопричина, потом plan → apply → verify → ground</span>
 /slimspec                 <span class="cmt"># активные изменения: продолжить или отменить</span></code></pre>
+<p><code>/slimspec:debug</code> заменяет explore для багов. Агент debugger воспроизводит баг, проверяет гипотезы по одной и возвращает первопричину с доказательствами; сам он ничего не чинит. Основная сессия превращает это в <code>explore.md</code>, воспроизведение становится первым падающим тестом, и цикл идёт дальше с гейта. Режим можно зафиксировать первым словом: <code>fast</code>, <code>medium</code> или <code>full</code>.</p>
 <p class="note">Каждую фазу можно вызвать и отдельно: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">OpenSpec, Superpowers и <span class="name">SlimSpec</span></h2>
@@ -263,12 +265,12 @@ questions: []</code></pre>
     <tr><td>Артефакты изменения</td><td>proposal, design, tasks, дельты спек; потом папка уезжает в архив в репозитории</td><td>для проекта: дизайн-документ с датой в <code>docs/superpowers/specs/</code> (коммитится) и план в <code>docs/superpowers/plans/</code>; мелкие правки согласуются в чате</td><td class="win"><strong>В коммит идут только код и правки спек.</strong> <code>explore.md</code> + <code>tasks.md</code>, в <code>.gitignore</code>, удаляются после ground</td></tr>
     <tr><td>Живая спека</td><td>файл на capability в <code>openspec/specs/</code>, агент читает, когда вы на него укажете</td><td>нет; на проект один дизайн-документ</td><td class="win"><strong>Грузится сама и только там, где вы работаете.</strong> Одна спека на модуль во вложенном <code>CLAUDE.md</code></td></tr>
     <tr><td>Слияние спек</td><td>секции ADDED / MODIFIED / REMOVED применяются к основной спеке по требованиям при архивации</td><td>в живую спеку ничего не сливается</td><td class="win"><strong>Слияние по смыслу.</strong> Модель переписывает противоречия и сверяет результат с намерением изменения</td></tr>
-    <tr><td>Субагенты</td><td>встроенного механизма нет</td><td>свежий субагент на каждую задачу и ревью после неё, либо выполнение в той же сессии</td><td class="win"><strong>Узкие агенты, дешёвый контекст.</strong> Scanner, planner, параллельные implementer по дорожкам, reviewer, grounder, у каждого своя модель; вопросы поднимаются к вам</td></tr>
+    <tr><td>Субагенты</td><td>встроенного механизма нет</td><td>свежий субагент на каждую задачу и ревью после неё, либо выполнение в той же сессии</td><td class="win"><strong>Узкие агенты, дешёвый контекст.</strong> Scanner, debugger, planner, параллельные implementer по дорожкам, reviewer, grounder, у каждого своя модель; вопросы поднимаются к вам</td></tr>
     <tr><td>Замеренная стоимость</td><td>45,7M токенов на изменение ~400 строк</td><td>не замерялась</td><td class="win"><strong>29,7M токенов на сопоставимое изменение, с двумя раундами ревью</strong></td></tr>
   </tbody>
 </table>
 </div>
-<p><strong>Чего нет в <span class="name">SlimSpec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (отладка, worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">SlimSpec</span> работает только с Claude Code и покрывает только spec-driven цикл. Он крутит один цикл и держится своей дорожки.</p>
+<p><strong>Чего нет в <span class="name">SlimSpec</span>.</strong> У OpenSpec сценарии остаются явными тест-кейсами, рядом со спеками лежит полная история всех изменений, и он работает с 30+ AI-инструментами. В Superpowers есть скиллы помимо работы со спеками (worktree, код-ревью и другие), и он поддерживает многих агентов. <span class="name">SlimSpec</span> работает только с Claude Code и покрывает только spec-driven цикл. Он крутит один цикл и держится своей дорожки.</p>
 
 <h2 id="migrate">Переезд с OpenSpec или Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → спеки модулей</span>
@@ -289,17 +291,22 @@ spec:
   adr: false              <span class="cmt"># дополнительно вести решения в docs/adr/NNNN-*.md</span>
 test: auto                <span class="cmt"># или явная команда</span>
 commit: none              <span class="cmt"># none | lane | wave</span>
+changes:
+  closed: delete          <span class="cmt"># delete | archive (.slimspec/archive/&lt;дата&gt;-&lt;slug&gt;/)</span>
+  gitignore: true         <span class="cmt"># добавить .slimspec/changes/ и .slimspec/archive/ в .gitignore</span>
 apply:
   agents: 3               <span class="cmt"># максимум параллельных implementer = максимум дорожек в волне</span>
 review:
   depth: auto             <span class="cmt"># auto (по режиму) | low | medium | high</span>
 models: {}                <span class="cmt"># переопределения по ролям, см. ниже</span></code></pre>
+<p><code>changes</code> решает, что происходит с папками изменений. При <code>closed: archive</code> ground не удаляет закрытое изменение, а переносит его в <code>.slimspec/archive/&lt;дата&gt;-&lt;slug&gt;/</code>; архивные изменения не показываются в списке и не продолжаются. При <code>gitignore: false</code> <code>.gitignore</code> не трогается, и с <code>commit: lane</code> или <code>wave</code> файлы изменения попадают в коммиты дорожек или волн, а ground коммитит их удаление или перенос вместе с правками спек.</p>
 <p><code>models</code> задаёт модель агента каждой фазы, ключ — роль: <code>haiku | sonnet | opus</code>. Неуказанные ключи остаются по умолчанию.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th>Фаза</th><th>Роль (ключ <code>models</code>)</th><th>По умолчанию</th></tr></thead>
   <tbody>
     <tr><td><code>explore</code> (medium, full)</td><td><code>scanner</code></td><td>sonnet</td></tr>
+    <tr><td><code>debug</code></td><td><code>debugger</code></td><td>opus</td></tr>
     <tr><td><code>plan</code> (medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
     <tr><td><code>refine</code> (структурное перепланирование, medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
     <tr><td><code>apply</code></td><td><code>implementer</code></td><td>sonnet</td></tr>

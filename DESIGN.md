@@ -22,7 +22,8 @@ Success looks like:
 
 - Support for agents other than Claude Code.
 - A CLI, daemon, hooks or scripts run by the plugin.
-- Persistent change history inside the repo (commits and grounded specs are the history).
+- Persistent change history inside the repo by default (commits and grounded specs are the history;
+  `changes.closed: archive` keeps closed changes as an opt-in, D27).
 - Up-front spec generation for a whole project.
 
 ## Flow
@@ -32,6 +33,8 @@ explore ──gate──▶ plan ──gate──▶ apply ──▶ verify ─�
    ▲                               ▲ │        │
    └──────────── refine ◀──────────┴─┴────────┘
 ```
+
+Bugs enter through `debug` instead of explore (D25): `debug ──gate──▶ plan ──gate──▶ apply ──▶ verify ──▶ ground`.
 
 | Phase  | fast                           | medium                        | full                                       |
 |--------|--------------------------------|-------------------------------|--------------------------------------------|
@@ -84,7 +87,7 @@ questions: []
 ```
 
 No raw logs or diffs. Details stay recoverable from the working tree. Role payloads ride in
-extra fields: scanner `brief`, reviewer `findings` (each with a concrete `recommendation`),
+extra fields: scanner `brief`, debugger `root_cause`, `evidence`, `repro` and `rejected`, reviewer `findings` (each with a concrete `recommendation`),
 `code_review` and `skipped` (checks skipped for a missing input), grounder `gaps`. An
 implementer returns one report per task of its lane (`fast`: of the change).
 - **Rejected:** full reports (context bloat); report files on disk (one more artifact type).
@@ -153,21 +156,27 @@ affected tasks `invalidated`, and sends only those back to apply. Approval reset
 2. Merge into the module spec with the model, not by keywords: contradicting statements are
    rewritten, not appended.
 3. Check that the updated specs cover the Goal and agree with the Decisions.
-4. Delete only `.slimspec/changes/<slug>/`; `.slimspec/`, its config and `changes/` stay. It never reached git (D13): the history is the commits and
-   the grounded specs.
+4. Close the change by `changes.closed` (D27): `delete` removes only `.slimspec/changes/<slug>/`,
+   `archive` moves it to `.slimspec/archive/<date>-<slug>/`; `.slimspec/`, its config and `changes/`
+   stay. By default it never reached git (D13): the history is the commits and the grounded specs.
 
 Scope: only modules touched by the diff. The root `CLAUDE.md` is updated only for
 cross-module decisions. Missing module specs are created lazily here — there is no init step.
 
 ### D13. Several active changes, one folder per slug
-`.slimspec/changes/<slug>/` holds `explore.md` and `tasks.md`. These are temporary: explore adds
-`.slimspec/changes/` to `.gitignore` when it creates the first folder (`.slimspec/config.yaml` stays
-tracked), so commits under `commit: lane | wave` never include change artifacts. `/slimspec` without
-arguments lists active changes to resume or abandon (delete the folder after confirmation, no ground).
+`.slimspec/changes/<slug>/` holds `explore.md` and `tasks.md`. These are temporary: explore (or debug)
+creates the folder only when it writes `explore.md`, and with `changes.gitignore: true` (default) adds
+`.slimspec/changes/` (and `.slimspec/archive/` under `changes.closed: archive`) to `.gitignore`
+(`.slimspec/config.yaml` stays tracked), so commits under `commit: lane | wave` never include change
+artifacts; with `false` it never touches `.gitignore` (D27). `/slimspec` without arguments lists active
+changes to resume or abandon (delete the folder after confirmation, no ground); only `changes/` is
+listed or resumed, never `archive/`.
 
 ### D14. Git behavior is configurable
 `commit: none | lane | wave`, default `none`. The main session commits, never the agents; ground
-commits spec edits when `commit` is not `none`. The framework never pushes.
+commits spec edits when `commit` is not `none`. With `changes.gitignore: false` (D27) lane and wave
+commits also carry the change's `explore.md` and `tasks.md`, and ground's commit the deletion or archive
+move. The framework never pushes.
 - **Rejected:** a commit per task — tasks of one lane may share files and report together, so per-task commits cannot be exact.
 
 ### D15. Entry points and mode selection
@@ -175,12 +184,13 @@ commits spec edits when `commit` is not `none`. The framework never pushes.
 `/slimspec:slimspec`; bare `/slimspec` works while no other command takes that name. Phase commands
 (`/slimspec:explore`, `:plan`, `:apply`, `:verify`, `:refine`, `:ground`) are available
 directly. `/slimspec:fast`, `/slimspec:medium` and `/slimspec:full <idea>` start the cycle
-in a fixed mode and skip the mode suggestion. Plain `/slimspec` takes the mode from config;
+in a fixed mode and skip the mode suggestion. `/slimspec:debug [mode] <bug>` starts a bug fix
+in place of explore (D25). Plain `/slimspec` takes the mode from config;
 after the scan, the router suggests a mode based on the size of the change and the user
 confirms.
 
 ### D16. Model tier per role
-scanner — sonnet, planner — opus, implementer — sonnet, reviewer — opus,
+scanner — sonnet, debugger — opus, planner — opus, implementer — sonnet, reviewer — opus,
 grounder — opus. Set in agent frontmatter and overridable in config.
 
 ### D17. `tasks.md` is semi-strict markdown
@@ -218,7 +228,7 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 
 ### D20. Optional init in the session
 - **Context:** config is optional, but its options are invisible until the user reads the docs.
-- **Choice:** `/slimspec:init` asks via `AskUserQuestion` in two batched calls (D23) plus a confirm,
+- **Choice:** `/slimspec:init` asks via `AskUserQuestion` in three batched calls (D23) plus a confirm,
   writes `.slimspec/config.yaml`; it never runs on its own.
 - **Rejected:** auto-creating config on first run (unrequested files); a bash wizard (skills can't
   drive an interactive script and `!` in the session has no TTY).
@@ -291,6 +301,56 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
 - **Rejected:** overlapping checks across tiers — duplicate failures and drift; repo-root marketplace
   source — installs carried all dev files.
 
+### D25. Bugs enter through `debug`, root cause first
+- **Context:** explore grills for decisions; a bug needs evidence first, and a fix built on a guess
+  patches the symptom.
+- **Choice:** `/slimspec:debug [fast | medium | full] <bug>` replaces explore for bugs:
+  `debug ──gate──▶ plan ──gate──▶ apply ──▶ verify ──▶ ground`. It launches the debugger (D26) with
+  the bug, the test command and `spec.format`; nothing is written yet, so an interrupted debug leaves no
+  folder. BLOCKED → the main session asks for steps, environment, logs and relaunches with all answers
+  so far and the report's `rejected` (D2: the prompt carries what no file holds); still no root cause →
+  the user picks another round, a change that only adds diagnostic logging, or abandon (nothing to
+  delete). With a confirmed root cause the main session picks the slug, creates the change folder as
+  explore does and writes `explore.md` from the template: Goal — the bug gone, observable, the
+  repro as the first `test-first`; Decisions — the root cause with evidence, rejected hypotheses as
+  rejected alternatives. A leading mode word pins the mode; otherwise a mode is suggested by the size
+  of the fix (usually `fast`). More than one viable fix direction → the user picks it, the debugger's
+  recommended; the gate also offers changing it. The gate walkthrough (D22) covers symptom, repro, root cause citing
+  `path:line`, evidence, rejected hypotheses, fix direction, risks; `fast` keeps the combined gate.
+  Then the router resumes from file state with plan; the fix itself is the normal red-green apply.
+- **Rejected:** a debug mode inside explore — grilling and investigation pull in opposite
+  directions; the debugger fixing the bug — skips the gates, plan and TDD evidence; a separate bug
+  artifact — `explore.md` already carries goal, decisions and risks; creating the folder before the
+  investigation — an interrupted debug leaves an empty folder that resume reads as a new explore.
+
+### D26. Debugger agent; implementer stops guessing
+- **Context:** guess-and-check patching hides root causes, in investigation and in apply alike.
+- **Choice:** `slimspec:debugger` runs investigation only: read errors in full, reproduce, check recent
+  changes, instrument component boundaries, trace bad data back; compare with working code; test one
+  hypothesis at a time with the smallest change. It never fixes; temporary instrumentation and a
+  throwaway repro are reverted, leaving the working tree as found. Report role fields: `root_cause`
+  (statement + `path:line`), `evidence`, `repro`, `rejected`; BLOCKED with `questions` when it cannot
+  reproduce or confirm. The implementer finds the root cause when a test fails unexpectedly or green
+  is not reached, and after 3 failed fix attempts stops with BLOCKED or FAILED listing its hypotheses.
+- **Rejected:** the main session investigating inline — fills its context with logs (D2); no limit on
+  implementer fix attempts — stacked patches on an unknown cause.
+
+### D27. Closed changes: delete or archive, gitignored or tracked
+- **Context:** change folders are temporary and gitignored by default; some teams want closed changes
+  kept for audit or review, and some want change files in their commits.
+- **Choice:** config section `changes`. `closed: delete | archive`, default `delete`: ground deletes
+  `.slimspec/changes/<slug>/` or moves it to `.slimspec/archive/<YYYY-MM-DD>-<slug>/` (`-2`, `-3`, … if taken); resume, the
+  router list and the state table read only `changes/`, so archived changes are never resumed.
+  `gitignore: true | false`, default `true`: explore and debug add `.slimspec/changes/` (and
+  `.slimspec/archive/` under `archive`) to `.gitignore` when they write a change's `explore.md`; `false`
+  never touches `.gitignore`, and under `commit: lane | wave` the change files go into the lane or wave
+  commits and ground commits the deletion or move with the spec edits. Defaults keep the earlier
+  behavior.
+- **Rejected:** a boolean `keep` flag — says neither where a kept change goes nor leaves room for another
+  policy;
+  keeping closed changes in `changes/` with a closed marker — every listing, resume and state check would
+  have to filter them, and the folder grows without bound.
+
 ## Artifacts
 
 ### explore.md
@@ -333,6 +393,9 @@ spec:
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
 commit: none              # none | lane | wave
+changes:
+  closed: delete          # delete | archive (.slimspec/archive/<date>-<slug>/)
+  gitignore: true         # add .slimspec/changes/ and .slimspec/archive/ to .gitignore
 apply:
   agents: 3               # max parallel implementers = max lanes per wave
 review:
@@ -364,6 +427,7 @@ slimspec/
       medium/
       full/
       explore/
+      debug/      # /slimspec:debug — root cause first, then explore.md from it
       plan/
       apply/
       verify/
@@ -374,6 +438,7 @@ slimspec/
       migrate-superpowers/  # /slimspec:migrate-superpowers — source rules, uses the flow above
     agents/
       scanner.md
+      debugger.md
       planner.md
       implementer.md
       reviewer.md

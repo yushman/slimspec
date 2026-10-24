@@ -14,6 +14,7 @@ Input: change folder `.slimspec/changes/<slug>/`, your lane — ordered task ids
 1. **Red** — write the `test-first` test (for a `fix:`, a test reproducing the finding) and run it. It must fail on its behavior assertion; a typo, missing import or missing symbol is not red — add the minimal stub and rerun.
 2. **Green** — implement the minimum that passes; rerun only the task's own tests (the test command narrowed to them). The main session runs the full suite after the wave.
 3. **`test: none`** — do the work, run the `check:`; report `red: "n/a — <reason>"` and the check result as `green`.
+4. **Stuck** — a test fails for an unexpected reason or green is not reached: find the root cause before changing code, no guess-and-check patches. After 3 failed fix attempts stop patching: BLOCKED (the design or plan looks wrong) or FAILED, listing each hypothesis tried and why it failed.
 
 Done when `done:` holds and the task's tests are green.
 

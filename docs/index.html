@@ -209,7 +209,7 @@ footer a { margin-right: 16px; }
   <dt>plan</dt><dd>A planner writes <code>tasks.md</code> in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.</dd>
   <dt>apply</dt><dd>One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed. A task blocked by the design or plan (a missing decision, wrong files, infeasible as planned) goes to you through <code>refine</code>, then apply continues.</dd>
   <dt>verify</dt><dd>A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through <code>refine</code>.</dd>
-  <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder <code>.slimspec/changes/&lt;slug&gt;/</code> is deleted; <code>.slimspec/</code> and its config stay.</dd>
+  <dt>ground</dt><dd>Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder <code>.slimspec/changes/&lt;slug&gt;/</code> is deleted (or archived, see Config); <code>.slimspec/</code> and its config stay.</dd>
 </dl>
 <figure class="shot"><a href="img/en/waves-lanes.png"><img src="img/en/waves-lanes.png" alt="tasks.md split into waves; each wave is divided into parallel lanes of related tasks that touch disjoint files, and each lane gets one implementer" loading="lazy"></a></figure>
 
@@ -226,7 +226,7 @@ tdd:
 questions: []</code></pre>
 <p>The main session's context stays clean of test-log walls, yet it holds every decision and every outcome.</p>
 <figure class="shot"><a href="img/en/main-session.png"><img src="img/en/main-session.png" alt="The main session in the center makes all decisions; scanner, planner, several implementers, reviewer and grounder send it short YAML reports; a BLOCKED question goes through the main session to the user and the answer comes back to the agent" loading="lazy"></a></figure>
-<p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. The folder is gitignored and removed after ground; the history is your commits and the updated specs. It goes quietly: anything worth keeping has already moved into the specs.</p>
+<p>A change lives in <code>.slimspec/changes/&lt;slug&gt;/</code> as <code>explore.md</code> and <code>tasks.md</code>. By default the folder is gitignored and removed after ground; the history is your commits and the updated specs. It goes quietly: anything worth keeping has already moved into the specs.</p>
 <p>Ground is the one part that still feels like classic SDD. The plan and the process are dropped; nobody will ever need to know which wave T3 was in. What survives is merged by an agent that understands why the change was made. A statement that contradicts the change gets rewritten instead of getting a new neighbour, otherwise the spec slowly becomes a comment thread arguing with itself. Then the agent checks that the updated spec covers the change's goal and doesn't argue with its decisions. The result lands in the module's nested <code>CLAUDE.md</code>, so the next agent that walks into that module finds the spec already waiting.</p>
 <figure class="shot"><a href="img/en/ground.png"><img src="img/en/ground.png" alt="Ground: durable knowledge is distilled from the change, merged by the model into the module CLAUDE.md, checked against the change's intent, and the change folder is deleted" loading="lazy"></a></figure>
 <p>TDD is enforced by red/green evidence, not by a hook. Verify won't accept a task without a red run, and the red has to fail for the right reason: a test that fails on a missing import proves nothing. You shall not pass. Where TDD doesn't apply (config, styles, migrations), a task says <code>test: none — &lt;reason&gt;</code> with an alternative check, and every such exemption is listed at the plan gate, so "tests aren't needed here" can't hide in the middle of the list.</p>
@@ -249,7 +249,9 @@ questions: []</code></pre>
 /slimspec:fast &lt;idea&gt;     <span class="cmt"># fixed mode, no suggestion</span>
 /slimspec:medium &lt;idea&gt;
 /slimspec:full &lt;idea&gt;
+/slimspec:debug &lt;bug&gt;     <span class="cmt"># root cause first, then plan → apply → verify → ground</span>
 /slimspec                 <span class="cmt"># list active changes: resume or abandon</span></code></pre>
+<p><code>/slimspec:debug</code> replaces explore for bugs. A debugger agent reproduces the bug, tests one hypothesis at a time and returns the root cause with evidence; it never fixes anything. The main session turns that into <code>explore.md</code>, with the repro as the first failing test, and the cycle goes on from the gate. A leading <code>fast</code>, <code>medium</code> or <code>full</code> pins the mode.</p>
 <p class="note">Each phase is also a command of its own: <code>/slimspec:explore</code>, <code>:plan</code>, <code>:apply</code>, <code>:verify</code>, <code>:refine</code>, <code>:ground</code>.</p>
 
 <h2 id="compare">Compared with OpenSpec and Superpowers</h2>
@@ -263,12 +265,12 @@ questions: []</code></pre>
     <tr><td>Artifacts per change</td><td>proposal, design, tasks, delta specs; the folder then moves to an archive in the repo</td><td>for a project: a dated design doc in <code>docs/superpowers/specs/</code> (committed) and a plan in <code>docs/superpowers/plans/</code>; small changes stay in chat</td><td class="win"><strong>Nothing to commit but code and spec edits.</strong> <code>explore.md</code> + <code>tasks.md</code>, gitignored, deleted after ground</td></tr>
     <tr><td>Living spec</td><td>one file per capability under <code>openspec/specs/</code>, read when you point the agent at it</td><td>none; one design doc per project</td><td class="win"><strong>Loaded on its own, only where you work.</strong> One spec per module as a nested <code>CLAUDE.md</code></td></tr>
     <tr><td>Spec merge</td><td>ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive</td><td>no merge into a living spec</td><td class="win"><strong>Merged by meaning.</strong> The model rewrites contradictions and checks the result against the change's intent</td></tr>
-    <tr><td>Subagents</td><td>no built-in subagent mechanism</td><td>a fresh subagent per task with a review after each, or inline execution</td><td class="win"><strong>Narrow agents, cheap context.</strong> Scanner, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you</td></tr>
+    <tr><td>Subagents</td><td>no built-in subagent mechanism</td><td>a fresh subagent per task with a review after each, or inline execution</td><td class="win"><strong>Narrow agents, cheap context.</strong> Scanner, debugger, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you</td></tr>
     <tr><td>Measured cost</td><td>45.7M tokens for a ~400-line change</td><td>not measured</td><td class="win"><strong>29.7M tokens for a comparable change, with two review rounds</strong></td></tr>
   </tbody>
 </table>
 </div>
-<p><strong>What <span class="name">SlimSpec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. <span class="name">SlimSpec</span> works only with Claude Code and covers only the spec-driven loop. It runs one loop and stays in its lane.</p>
+<p><strong>What <span class="name">SlimSpec</span> does not have.</strong> OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (worktrees, code review and others) and supports many coding agents. <span class="name">SlimSpec</span> works only with Claude Code and covers only the spec-driven loop. It runs one loop and stays in its lane.</p>
 
 <h2 id="migrate">Migrating from OpenSpec or Superpowers</h2>
 <pre><code>/slimspec:migrate-openspec     <span class="cmt"># openspec/specs/ → module specs</span>
@@ -289,17 +291,22 @@ spec:
   adr: false              <span class="cmt"># also keep decisions in docs/adr/NNNN-*.md</span>
 test: auto                <span class="cmt"># or an explicit command</span>
 commit: none              <span class="cmt"># none | lane | wave</span>
+changes:
+  closed: delete          <span class="cmt"># delete | archive (.slimspec/archive/&lt;date&gt;-&lt;slug&gt;/)</span>
+  gitignore: true         <span class="cmt"># add .slimspec/changes/ and .slimspec/archive/ to .gitignore</span>
 apply:
   agents: 3               <span class="cmt"># max parallel implementers = max lanes per wave</span>
 review:
   depth: auto             <span class="cmt"># auto (by mode) | low | medium | high</span>
 models: {}                <span class="cmt"># per-role overrides, see below</span></code></pre>
+<p><code>changes</code> decides what happens to change folders. <code>closed: archive</code> makes ground move a closed change to <code>.slimspec/archive/&lt;date&gt;-&lt;slug&gt;/</code> instead of deleting it; archived changes are never listed or resumed. <code>gitignore: false</code> leaves <code>.gitignore</code> alone, so with <code>commit: lane</code> or <code>wave</code> the change files go into the lane or wave commits, and ground commits their deletion or move together with the spec edits.</p>
 <p><code>models</code> sets the model of each phase's agent, keyed by role: <code>haiku | sonnet | opus</code>. Keys you leave out keep their defaults.</p>
 <div class="table-scroll">
 <table>
   <thead><tr><th>Phase</th><th>Role (<code>models</code> key)</th><th>Default</th></tr></thead>
   <tbody>
     <tr><td><code>explore</code> (medium, full)</td><td><code>scanner</code></td><td>sonnet</td></tr>
+    <tr><td><code>debug</code></td><td><code>debugger</code></td><td>opus</td></tr>
     <tr><td><code>plan</code> (medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
     <tr><td><code>refine</code> (structural replanning, medium, full)</td><td><code>planner</code></td><td>opus</td></tr>
     <tr><td><code>apply</code></td><td><code>implementer</code></td><td>sonnet</td></tr>

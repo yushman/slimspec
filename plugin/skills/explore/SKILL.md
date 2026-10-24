@@ -48,7 +48,7 @@ One decision per question, options grounded in the brief, a one-line trade-off e
   Then ask: finalize / keep exploring (open branches named); keep exploring → step 2. This is the `medium` explore gate.
 - **fast** — no offer; plan holds the combined gate.
 
-Create `.slimspec/changes/<slug>/` and make sure `.slimspec/changes/` is a line of the project's `.gitignore` (append; create the file if missing; never touch other lines). Write `explore.md` there from `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/explore-template.md`; Decisions carry context, choice and rejected alternatives.
+Create `.slimspec/changes/<slug>/` with the `.gitignore` handling of protocol "Change folder". Write `explore.md` there from `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/explore-template.md`; Decisions carry context, choice and rejected alternatives.
 
 - **full** — show `explore.md` in full; ask to approve or name changes until approved.
 

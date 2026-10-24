@@ -6,7 +6,7 @@ argument-hint: "[idea | change-slug]"
 
 # slimspec router
 
-Input: `$ARGUMENTS` — an idea, a change slug, or nothing. An entry skill (`fast`, `medium`, `full`) that sent you here pinned the mode and passed its input.
+Input: `$ARGUMENTS` — an idea, a change slug, or nothing. An entry skill (`fast`, `medium`, `full`) that sent you here pinned the mode and passed its input; `debug` sends a slug with `explore.md` written.
 
 Read `${CLAUDE_PLUGIN_ROOT}/skills/slimspec/protocol.md` first. Running a phase means: read `${CLAUDE_PLUGIN_ROOT}/skills/<phase>/SKILL.md` and follow it for the current mode.
 

@@ -116,7 +116,7 @@ Caveats, up front: n = 1–2 per flow, one project. The small **SlimSpec** chang
 - `plan`: A planner writes `tasks.md` in waves and groups each wave into lanes of related tasks. Lanes in one wave touch disjoint files and run in parallel. Each task names its first failing test.
 - `apply`: One implementer per lane works through its tasks in order, with red-green evidence for each. The full suite runs after each wave, so lanes that pass on their own can't fail together unnoticed. A task blocked by the design or plan (a missing decision, wrong files, infeasible as planned) goes to you through `refine`, then apply continues.
 - `verify`: A reviewer checks plan and design conformance, TDD evidence and the code. Bugs go back to apply; design issues go to you through `refine`.
-- `ground`: Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder `.slimspec/changes/<slug>/` is deleted; `.slimspec/` and its config stay.
+- `ground`: Durable knowledge (behavior, invariants, contracts, decisions) is distilled and merged into the touched module specs by the model, not by keywords. Then the change folder `.slimspec/changes/<slug>/` is deleted (or archived, see Config); `.slimspec/` and its config stay.
 
 ![tasks.md split into waves; each wave is divided into parallel lanes of related tasks that touch disjoint files, and each lane gets one implementer](docs/img/en/waves-lanes.png)
 
@@ -140,7 +140,7 @@ The main session's context stays clean of test-log walls, yet it holds every dec
 
 ![The main session in the center makes all decisions; scanner, planner, several implementers, reviewer and grounder send it short YAML reports; a BLOCKED question goes through the main session to the user and the answer comes back to the agent](docs/img/en/main-session.png)
 
-A change lives in `.slimspec/changes/<slug>/` as `explore.md` and `tasks.md`. The folder is gitignored (**SlimSpec** adds `.slimspec/changes/` to `.gitignore`) and removed after ground; the history is your commits and the updated specs. It goes quietly: anything worth keeping has already moved into the specs. `/slimspec <slug>` resumes a change from its files.
+A change lives in `.slimspec/changes/<slug>/` as `explore.md` and `tasks.md`. By default the folder is gitignored (**SlimSpec** adds `.slimspec/changes/` to `.gitignore`) and removed after ground; the history is your commits and the updated specs. It goes quietly: anything worth keeping has already moved into the specs. `/slimspec <slug>` resumes a change from its files.
 
 Ground is the one part that still feels like classic SDD. The plan and the process are dropped; nobody will ever need to know which wave T3 was in. What survives is merged by an agent that understands why the change was made. A statement that contradicts the change gets rewritten instead of getting a new neighbour, otherwise the spec slowly becomes a comment thread arguing with itself. Then the agent checks that the updated spec covers the change's goal and doesn't argue with its decisions. The result lands in the module's nested `CLAUDE.md`, so the next agent that walks into that module finds the spec already waiting.
 
@@ -167,8 +167,11 @@ The planner splits each wave into lanes of related tasks with disjoint files; ap
 /slimspec:fast <idea>     # fixed mode, no suggestion
 /slimspec:medium <idea>
 /slimspec:full <idea>
+/slimspec:debug <bug>     # root cause first, then plan → apply → verify → ground
 /slimspec                 # list active changes: resume or abandon
 ```
+
+`/slimspec:debug` replaces explore for bugs. A debugger agent reproduces the bug, tests one hypothesis at a time and returns the root cause with evidence; it never fixes anything. The main session turns that into `explore.md`, with the repro as the first failing test, and the cycle goes on from the gate. A leading `fast`, `medium` or `full` pins the mode.
 
 Each phase is also a command of its own: `/slimspec:explore`, `/slimspec:plan`, `/slimspec:apply`, `/slimspec:verify`, `/slimspec:refine`, `/slimspec:ground`.
 
@@ -183,10 +186,10 @@ Each phase is also a command of its own: `/slimspec:explore`, `/slimspec:plan`, 
 | Artifacts per change  | proposal, design, tasks, delta specs; the folder then moves to an archive in the repo | for a project: a dated design doc in `docs/superpowers/specs/` (committed) and a plan in `docs/superpowers/plans/`; small changes stay in chat | **Nothing to commit but code and spec edits.** `explore.md` + `tasks.md`, gitignored, deleted after ground |
 | Living spec           | one file per capability under `openspec/specs/`, read when you point the agent at it | none; one design doc per project | **Loaded on its own, only where you work.** One spec per module as a nested `CLAUDE.md` |
 | Spec merge            | ADDED / MODIFIED / REMOVED sections applied to the main spec, requirement by requirement, at archive | no merge into a living spec | **Merged by meaning.** The model rewrites contradictions and checks the result against the change's intent |
-| Subagents             | no built-in subagent mechanism | a fresh subagent per task with a review after each, or inline execution | **Narrow agents, cheap context.** Scanner, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you |
+| Subagents             | no built-in subagent mechanism | a fresh subagent per task with a review after each, or inline execution | **Narrow agents, cheap context.** Scanner, debugger, planner, parallel implementers per lane, reviewer, grounder, each on its own model; questions bubble up to you |
 | Measured cost         | 45.7M tokens for a ~400-line change | not measured | **29.7M tokens for a comparable change, with two review rounds** |
 
-**What SlimSpec does not have.** OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (debugging, worktrees, code review and others) and supports many coding agents. **SlimSpec** works only with Claude Code and covers only the spec-driven loop. It runs one loop and stays in its lane.
+**What SlimSpec does not have.** OpenSpec keeps scenarios as explicit test cases and a full history of every change next to the specs, and it works with 30+ AI tools. Superpowers has skills outside the spec flow (worktrees, code review and others) and supports many coding agents. **SlimSpec** works only with Claude Code and covers only the spec-driven loop. It runs one loop and stays in its lane.
 
 ## Migrating from OpenSpec or Superpowers
 
@@ -212,6 +215,9 @@ spec:
   adr: false              # also keep decisions in docs/adr/NNNN-*.md
 test: auto                # or an explicit command
 commit: none              # none | lane | wave
+changes:
+  closed: delete          # delete | archive (.slimspec/archive/<date>-<slug>/)
+  gitignore: true         # add .slimspec/changes/ and .slimspec/archive/ to .gitignore
 apply:
   agents: 3               # max parallel implementers = max lanes per wave
 review:
@@ -219,11 +225,14 @@ review:
 models: {}                # per-role overrides, see below
 ```
 
+`changes` decides what happens to change folders. `closed: archive` makes ground move a closed change to `.slimspec/archive/<date>-<slug>/` instead of deleting it; archived changes are never listed or resumed. `gitignore: false` leaves `.gitignore` alone, so with `commit: lane` or `wave` the change files go into the lane or wave commits, and ground commits their deletion or move together with the spec edits.
+
 `models` sets the model of each phase's agent, keyed by role: `haiku | sonnet | opus`. Keys you leave out keep their defaults.
 
 | Phase | Role (`models` key) | Default |
 |---|---|---|
 | explore (medium, full) | `scanner` | sonnet |
+| debug | `debugger` | opus |
 | plan (medium, full) | `planner` | opus |
 | refine (structural replanning, medium, full) | `planner` | opus |
 | apply | `implementer` | sonnet |
