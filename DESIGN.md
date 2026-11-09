@@ -54,7 +54,7 @@ an explicit gate on the written `explore.md` and shows the whole `tasks.md` at t
 
 ### D1. Claude plugin core, host mapping for other hosts
 - **Context:** the prompts use Claude Code terms (plugin root, `AskUserQuestion`, `Agent` launches); a neutral rewrite would touch every file.
-- **Choice:** the core stays a Claude Code plugin with `skills/` and `agents/` (in `plugin/`). Other hosts (OpenCode, Codex, ZCode) get mapping files and shims, not a rewrite (D28).
+- **Choice:** the core stays a Claude Code plugin with `skills/` and `agents/` (in `plugin/`). Other hosts (OpenCode, Codex, ZCode, Antigravity, Qwen Code) get mapping files and shims, not a rewrite (D28).
 - **Rejected:** a neutral rewrite with a host table in the protocol — many files and Claude regression risk; conversion at install — fragile regexes.
 
 ### D2. The main session is the single source of context
@@ -354,8 +354,8 @@ cycle (D9); nits are listed in the summary and never trigger a cycle.
   have to filter them, and the folder grows without bound.
 
 ### D28. Other hosts: mapping files, one stub, pointer agents, `install.sh`
-- **Context:** OpenCode, Codex and ZCode have no plugin namespace and no access to a plugin root; `plugin/**` is Claude-shaped.
-- **Choice:** `plugin/**` prose stays as is. `hosts/{opencode,codex,zcode}.md` map Claude terms (plugin root, `AskUserQuestion`, `slimspec:<role>` launches, `/code-review`, `/slimspec:<phase>`) to the host; one stub skill `hosts/skill/SKILL.md` named `slimspec` identifies the host and loads its mapping, then the router. Per-host pointer agents `slimspec-<role>` (`hosts/<host>/agents/`) read `agents/<role>.md` from the install root, with read-only limits for scanner and reviewer. `install.sh` (POSIX sh, `curl | sh`, tag tarball) copies the plugin files and `hosts/*.md` to a data dir, substitutes `<root>` into the stub and agents, and uninstalls only what it wrote. Questions go through the host's question tool or a text question that ends the turn. Migrate skills stay Claude-only.
+- **Context:** OpenCode, Codex, ZCode, Antigravity CLI and Qwen Code have no plugin namespace and no access to a plugin root; `plugin/**` is Claude-shaped.
+- **Choice:** `plugin/**` prose stays as is. `hosts/{opencode,codex,zcode,qwen,antigravity}.md` map Claude terms (plugin root, `AskUserQuestion`, `slimspec:<role>` launches, `/code-review`, `/slimspec:<phase>`) to the host; one stub skill `hosts/skill/SKILL.md` named `slimspec` identifies the host and loads its mapping, then the router. Per-host pointer agents `slimspec-<role>` (`hosts/<host>/agents/`; Antigravity globally gets its own stub in `~/.gemini/config/skills/`) read `agents/<role>.md` from the install root, with read-only limits for scanner and reviewer. `install.sh` (POSIX sh, `curl | sh`, tag tarball) copies the plugin files and `hosts/*.md` to a data dir, substitutes `<root>` into the stub and agents, and uninstalls only what it wrote. Without a host argument it asks scope and host on `/dev/tty` (`SLIMSPEC_TTY` overrides the path), and the `claude` choice only prints the plugin commands, and exits 2 with usage when there is no terminal or the answer is invalid. Questions go through the host's question tool or a text question that ends the turn. Migrate skills stay Claude-only.
 - **Rejected:** a neutral rewrite (D1); one stub per host — duplicate `slimspec` skills; an npm CLI — publishing pipeline and node; host marketplaces — no way to load the mapping.
 
 ## Artifacts

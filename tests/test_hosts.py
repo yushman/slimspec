@@ -260,10 +260,62 @@ class ZCodeAgentsTest(unittest.TestCase):
         self.assertEqual(check_zcode_tree(), [])
 
 
+def check_frontmatter_agent(host, role, text):
+    if not exists("plugin", "agents", f"{role}.md"):
+        return [f"{role}: no plugin agent"]
+    fm = plugin.frontmatter(text)
+    if fm is None:
+        return [f"{role}: no frontmatter"]
+    d = dict(fm)
+    problems = unquoted_colon_problems(role, fm)
+    if d.get("name") != f"slimspec-{role}":
+        problems.append(f"{role}: name must be slimspec-{role}")
+    if not d.get("description"):
+        problems.append(f"{role}: no description")
+    if "model" in d:
+        problems.append(f"{role}: model not allowed")
+    if host == "qwen" and role in READ_ONLY:
+        if not all(t in d.get("disallowedTools", "") for t in ("write_file", "edit")):
+            problems.append(f"{role}: disallowedTools must name write_file and edit")
+    if host == "antigravity":
+        if d.get("subagent") != "true" or d.get("mainAgent") != "false":
+            problems.append(f"{role}: subagent/mainAgent flags missing")
+        tools = d.get("tools", "")
+        if not tools:
+            problems.append(f"{role}: tools missing")
+        writes = ("write_to_file", "replace_file_content", "multi_replace_file_content")
+        if role in READ_ONLY and any(w in tools for w in writes):
+            problems.append(f"{role}: read-only role has write tools")
+        if role not in READ_ONLY and not all(w in tools for w in writes):
+            problems.append(f"{role}: write tools missing")
+    if not pointer_ok(role, text.split("\n---\n", 1)[-1]):
+        problems.append(f"{role}: body does not point to the role file")
+    return problems
+
+
+class NewHostAgentsTest(unittest.TestCase):
+    def test_trees(self):
+        for host in ("qwen", "antigravity"):
+            for role in ROLES:
+                rel = ("hosts", host, "agents", f"slimspec-{role}.md")
+                self.assertTrue(exists(*rel), rel)
+                self.assertEqual(check_frontmatter_agent(host, role, plugin.read(*rel)), [], rel)
+
+    def test_flags_antigravity_read_only_with_write_tool(self):
+        text = plugin.read("hosts", "antigravity", "agents", "slimspec-scanner.md")
+        self.assertTrue(check_frontmatter_agent("antigravity", "scanner", text.replace("run_command]", "run_command, write_to_file]")))
+
+    def test_flags_qwen_read_only_without_disallowed(self):
+        text = plugin.read("hosts", "qwen", "agents", "slimspec-scanner.md")
+        self.assertTrue(check_frontmatter_agent("qwen", "scanner", text.replace("disallowedTools: [write_file, edit]\n", "")))
+
+
 STUB_REFS = [
     "<root>/hosts/opencode.md",
     "<root>/hosts/codex.md",
     "<root>/hosts/zcode.md",
+    "<root>/hosts/qwen.md",
+    "<root>/hosts/antigravity.md",
     "<root>/skills/slimspec/SKILL.md",
     "<root>/skills/<",
 ]
@@ -309,11 +361,11 @@ class StubTest(unittest.TestCase):
 
 class MappingFilesTest(unittest.TestCase):
     def test_mapping_files_exist(self):
-        for host in ("opencode", "codex", "zcode"):
+        for host in ("opencode", "codex", "zcode", "qwen", "antigravity"):
             self.assertTrue(exists("hosts", f"{host}.md"), f"hosts/{host}.md missing")
 
     def test_mappings_name_config_yaml_and_init_agents_md(self):
-        for host in ("opencode", "codex", "zcode"):
+        for host in ("opencode", "codex", "zcode", "qwen", "antigravity"):
             text = plugin.read("hosts", f"{host}.md")
             self.assertIn(".slimspec/config.yaml", text, host)
             self.assertNotIn("config.yml", text, host)
@@ -321,14 +373,14 @@ class MappingFilesTest(unittest.TestCase):
 
     def test_init_options_and_batching_are_explicit(self):
         options = "`agents-md` (recommended) | `claude-md` | `readme` | `central`"
-        for host in ("opencode", "codex", "zcode"):
+        for host in ("opencode", "codex", "zcode", "qwen", "antigravity"):
             text = plugin.read("hosts", f"{host}.md")
             self.assertIn(options, text, host)
             self.assertRegex(text, r"`native`[^\n]*`none`", host)
             self.assertIn("up to 4 independent questions", text, host)
 
     def test_no_one_decision_per_call(self):
-        for host in ("opencode", "codex", "zcode"):
+        for host in ("opencode", "codex", "zcode", "qwen", "antigravity"):
             self.assertNotIn("one decision per call", plugin.read("hosts", f"{host}.md"), host)
 
     def test_opencode_batches_in_one_question_call(self):

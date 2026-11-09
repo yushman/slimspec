@@ -32,18 +32,19 @@ claude --plugin-dir ~/src/slimspec/plugin
 
 Inside there are only skills and agent definitions. No scripts, no hooks, no CLI, so there isn't much left to break.
 
-### OpenCode, Codex, ZCode
+### OpenCode, Codex, ZCode, Antigravity, Qwen Code
 
-Untested until the smoke passes: all three hosts. Written against Codex CLI 0.154.0; OpenCode and ZCode docs as of 2026-10 (no tested version).
+Untested until the smoke passes: all five hosts. Written against Codex CLI 0.154.0; OpenCode, ZCode, Antigravity CLI (`agy`) and Qwen Code docs as of 2026-10 (no tested version).
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh | sh -s -- <host>
 ```
 
-`<host>` is one of `opencode`, `codex`, `zcode`, `all`.
+`<host>` is one of `opencode`, `codex`, `zcode`, `antigravity`, `qwen`, `all`; `claude` only prints the Claude Code plugin commands. Without `<host>` the installer asks for scope (global or project) and host on the terminal (no terminal: usage error); the project scope does not offer `zcode`.
 
 - To read the script first: `curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh -o install.sh`, look at it, then `sh install.sh codex`.
-- `--project` installs into the current project (`.opencode/agents/`, `.codex/agents/`, `.agents/skills/`, data in `.slimspec/install/`). It is per machine (absolute paths): every written path is added to `.gitignore`, and each teammate runs the installer. ZCode is global only: `zcode --project` fails, `all --project` skips ZCode.
+- `--project` installs into the current project (`.opencode/agents/`, `.codex/agents/`, `.qwen/agents/`, `.agents/agents/`, `.agents/skills/`, data in `.slimspec/install/`). It is per machine (absolute paths): every written path is added to `.gitignore`, and each teammate runs the installer. ZCode is global only: `zcode --project` fails, `all --project` skips ZCode.
+- Global paths: Qwen Code `~/.qwen/agents/` (skill stub shared in `~/.agents/skills/`); Antigravity `~/.gemini/config/agents/` with its own stub in `~/.gemini/config/skills/`.
 - `--version <tag>` installs that tag instead of the version of the script.
 - Update = rerun the installer. Remove = rerun it with `--uninstall`; only the files it wrote are deleted.
 - Usage: `$slimspec <phase|mode> <idea>`, e.g. `$slimspec fast add a --verbose flag`, or the host's own way to invoke a skill named `slimspec`. Specs are written as `AGENTS.md` by default (`spec.format: agents-md`). The migrate skills are Claude Code only.

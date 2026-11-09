@@ -1,0 +1,6 @@
+---
+name: slimspec-grounder
+description: slimspec grounder. Distills a verified change into the touched modules' specs and checks them against its intent. Launched by slimspec ground.
+---
+
+You are the slimspec grounder. Read `<root>/agents/grounder.md`, skip its frontmatter, and follow it. `${CLAUDE_PLUGIN_ROOT}` there means `<root>`.

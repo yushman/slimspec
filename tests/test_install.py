@@ -58,7 +58,9 @@ class InstallCase(unittest.TestCase):
             "HOME": str(self.home),
             "CURL_LOG": str(self.log),
             "CURL_TARBALL": str(self.tarball),
+            "SLIMSPEC_TTY": str(t / "no-tty"),
         }
+        self.tty = t / "tty"
 
     def run_sh(self, *args, cwd=None, **env):
         e = dict(self.env, **env)
@@ -120,6 +122,31 @@ class TestInstall(InstallCase):
         self.assertTrue((self.home / ".zcode/agents/slimspec-scanner.md").is_file())
         self.assertTrue((self.home / ".zcode/skills/slimspec/SKILL.md").is_file())
         self.assertEqual(len(list((self.home / ".agents/skills").iterdir())), 1)
+        self.assertTrue((self.home / ".qwen/agents/slimspec-scanner.md").is_file())
+        self.assertTrue((self.home / ".gemini/config/agents/slimspec-scanner.md").is_file())
+        self.assertTrue((self.home / ".gemini/config/skills/slimspec/SKILL.md").is_file())
+
+    def test_qwen_install_writes_agents_and_shared_stub(self):
+        r = self.run_sh("qwen")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        for f in self.agent_files(self.home / ".qwen/agents", "md"):
+            self.assertTrue(f.is_file(), f)
+            self.assertNotIn("<root>", f.read_text())
+            self.assertIn(str(self.data), f.read_text())
+        self.assertTrue((self.home / ".agents/skills/slimspec/SKILL.md").is_file())
+        self.assertFalse((self.home / ".gemini").exists())
+
+    def test_antigravity_install_writes_own_global_stub_and_agents(self):
+        r = self.run_sh("antigravity")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        g = self.home / ".gemini/config"
+        for f in self.agent_files(g / "agents", "md"):
+            self.assertTrue(f.is_file(), f)
+            self.assertNotIn("<root>", f.read_text())
+        stub = (g / "skills/slimspec/SKILL.md").read_text()
+        self.assertIn(str(self.data), stub)
+        self.assertNotIn("<root>", stub)
+        self.assertFalse((self.home / ".agents").exists())
 
     def test_xdg_data_home_is_honored(self):
         x = self.home / "xdg"
@@ -149,7 +176,8 @@ class TestProject(InstallCase):
         lines = (self.proj / ".gitignore").read_text().splitlines()
         self.assertEqual(lines[0], "node_modules")
         for p in (".slimspec/install/", ".agents/skills/slimspec/",
-                  ".opencode/agents/slimspec-*", ".codex/agents/slimspec-*"):
+                  ".opencode/agents/slimspec-*", ".codex/agents/slimspec-*",
+                  ".qwen/agents/slimspec-*", ".agents/agents/slimspec-*"):
             self.assertEqual(lines.count(p), 1, (p, lines))
 
     def test_project_codex_paths(self):
@@ -157,6 +185,22 @@ class TestProject(InstallCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         for f in self.agent_files(self.proj / ".codex/agents", "toml"):
             self.assertTrue(f.is_file(), f)
+
+    def test_project_qwen_and_antigravity_paths(self):
+        r = self.run_sh("qwen", "--project")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        r = self.run_sh("antigravity", "--project")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        for f in self.agent_files(self.proj / ".qwen/agents", "md"):
+            self.assertIn(str(self.pdata), f.read_text())
+        for f in self.agent_files(self.proj / ".agents/agents", "md"):
+            self.assertIn(str(self.pdata), f.read_text())
+        self.assertTrue((self.proj / ".agents/skills/slimspec/SKILL.md").is_file())
+        self.assertFalse((self.home / ".gemini").exists())
+        lines = (self.proj / ".gitignore").read_text().splitlines()
+        for p in (".qwen/agents/slimspec-*", ".agents/agents/slimspec-*",
+                  ".agents/skills/slimspec/"):
+            self.assertEqual(lines.count(p), 1, (p, lines))
 
     def test_zcode_project_exits_2(self):
         r = self.run_sh("zcode", "--project")
@@ -170,6 +214,107 @@ class TestProject(InstallCase):
         self.assertTrue((self.proj / ".opencode/agents/slimspec-scanner.md").is_file())
         self.assertFalse((self.proj / ".zcode").exists())
         self.assertFalse((self.home / ".zcode").exists())
+
+
+class TestInteractive(InstallCase):
+    def answer(self, text, *args):
+        self.tty.write_text(text)
+        return self.run_sh(*args, SLIMSPEC_TTY=str(self.tty))
+
+    def test_global_default_scope_and_host_by_number(self):
+        r = self.answer("\n3\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.home / ".codex/agents/slimspec-scanner.toml").is_file())
+        self.assertFalse((self.home / ".config/opencode").exists())
+
+    def test_global_all_by_name_includes_zcode(self):
+        r = self.answer("1\nall\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.home / ".zcode/agents/slimspec-scanner.md").is_file())
+
+    def test_project_scope_installs_into_cwd(self):
+        r = self.answer("2\n2\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.proj / ".opencode/agents/slimspec-scanner.md").is_file())
+        self.assertFalse((self.home / ".config").exists())
+
+    def test_project_scope_does_not_offer_zcode(self):
+        r = self.answer("2\nzcode\n")
+        self.assertEqual(r.returncode, 2)
+        self.assertNotIn("zcode", r.stderr.split("Host:")[0])
+        self.assertEqual(self.log.read_text(), "")
+
+    def test_project_all_is_opencode_and_codex(self):
+        r = self.answer("2\n6\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.proj / ".codex/agents/slimspec-scanner.toml").is_file())
+        self.assertTrue((self.proj / ".qwen/agents/slimspec-scanner.md").is_file())
+        self.assertFalse((self.proj / ".zcode").exists())
+
+    def test_project_flag_skips_scope_question(self):
+        r = self.answer("codex\n", "--project")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("Scope", r.stderr)
+        self.assertTrue((self.proj / ".codex/agents/slimspec-scanner.toml").is_file())
+
+    def test_uninstall_flag_applies(self):
+        self.run_sh("codex")
+        r = self.answer("1\ncodex\n", "--uninstall")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse((self.home / ".codex/agents/slimspec-scanner.toml").exists())
+
+    def test_invalid_answers_exit_2(self):
+        for text in ("9\n1\n", "1\nbogus\n", "1\n", ""):
+            r = self.answer(text)
+            self.assertEqual(r.returncode, 2, text)
+            self.assertIn("install.sh:", r.stderr)
+        self.assertEqual(self.log.read_text(), "")
+
+    def test_menu_numbering_and_hosts_per_scope(self):
+        r = self.answer("1\n9\n")
+        self.assertIn("  4) zcode\n  5) antigravity\n  6) qwen\n  7) all\n", r.stderr)
+        r = self.answer("2\n9\n")
+        self.assertIn("  4) antigravity\n  5) qwen\n  6) all\n", r.stderr)
+        self.assertNotIn("zcode", r.stderr)
+
+    def test_new_hosts_via_menu(self):
+        r = self.answer("1\n6\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.home / ".qwen/agents/slimspec-scanner.md").is_file())
+        r = self.answer("2\nantigravity\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.proj / ".agents/agents/slimspec-scanner.md").is_file())
+
+    def test_menu_offers_claude_first_in_both_scopes(self):
+        for scope in ("1", "2"):
+            r = self.answer(scope + "\n9\n")
+            self.assertIn("  1) claude\n", r.stderr)
+
+    def test_claude_via_menu_prints_hint_and_writes_nothing(self):
+        r = self.answer("1\n1\n")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("/plugin install slimspec@slimspec", r.stderr)
+        self.assertEqual(list(self.home.iterdir()), [])
+        self.assertEqual(list(self.proj.iterdir()), [])
+        self.assertEqual(self.log.read_text(), "")
+
+    def test_claude_via_argv_prints_hint_and_writes_nothing(self):
+        r = self.run_sh("claude")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("/plugin marketplace add yushman/slimspec", r.stderr)
+        self.assertEqual(list(self.home.iterdir()), [])
+        self.assertEqual(self.log.read_text(), "")
+
+    def test_claude_uninstall_prints_hint(self):
+        r = self.run_sh("claude", "--uninstall")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("/plugin uninstall slimspec@slimspec", r.stderr)
+
+    def test_host_argument_does_not_prompt(self):
+        r = self.answer("2\n", "codex")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("Scope", r.stderr)
+        self.assertTrue((self.home / ".codex/agents/slimspec-scanner.toml").is_file())
 
 
 class TestErrors(InstallCase):
@@ -230,10 +375,48 @@ class TestUninstall(InstallCase):
         self.assertFalse((self.home / ".agents/skills/slimspec").exists())
         self.assertFalse(self.data.exists())
 
+    def test_uninstall_keeps_shared_stub_while_qwen_remains(self):
+        self.run_sh("all")
+        for h in ("opencode", "codex"):
+            self.run_sh(h, "--uninstall")
+        self.assertTrue((self.home / ".agents/skills/slimspec/SKILL.md").is_file())
+        self.run_sh("qwen", "--uninstall")
+        self.assertFalse((self.home / ".agents/skills/slimspec").exists())
+        self.assertFalse((self.home / ".qwen/agents/slimspec-scanner.md").exists())
+        self.assertTrue(self.data.is_dir())
+
+    def test_uninstall_keeps_data_while_antigravity_remains(self):
+        self.run_sh("all")
+        for h in ("opencode", "codex", "qwen", "zcode"):
+            self.run_sh(h, "--uninstall")
+        self.assertTrue(self.data.is_dir())
+        self.assertTrue((self.home / ".gemini/config/skills/slimspec/SKILL.md").is_file())
+        self.run_sh("antigravity", "--uninstall")
+        self.assertFalse(self.data.exists())
+        self.assertFalse((self.home / ".gemini/config/skills/slimspec").exists())
+        self.assertFalse((self.home / ".gemini/config/agents/slimspec-scanner.md").exists())
+
+    def test_uninstall_keeps_foreign_antigravity_stub(self):
+        stub = self.home / ".gemini/config/skills/slimspec"
+        stub.mkdir(parents=True)
+        (stub / "SKILL.md").write_text("someone else's skill")
+        self.run_sh("opencode")
+        self.run_sh("antigravity", "--uninstall")
+        self.assertEqual((stub / "SKILL.md").read_text(), "someone else's skill")
+
+    def test_uninstall_project_antigravity_keeps_shared_stub_for_qwen(self):
+        self.run_sh("all", "--project")
+        for h in ("opencode", "codex", "antigravity"):
+            self.run_sh(h, "--project", "--uninstall")
+        self.assertTrue((self.proj / ".agents/skills/slimspec/SKILL.md").is_file())
+        self.run_sh("qwen", "--project", "--uninstall")
+        self.assertFalse((self.proj / ".agents/skills/slimspec").exists())
+        self.assertFalse(self.pdata.exists())
+
     def test_uninstall_keeps_data_while_zcode_remains(self):
         self.run_sh("all")
-        self.run_sh("opencode", "--uninstall")
-        self.run_sh("codex", "--uninstall")
+        for h in ("opencode", "codex", "qwen", "antigravity"):
+            self.run_sh(h, "--uninstall")
         self.assertTrue(self.data.is_dir())
         self.assertTrue((self.home / ".zcode/agents/slimspec-scanner.md").is_file())
         self.run_sh("zcode", "--uninstall")
