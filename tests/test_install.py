@@ -321,14 +321,14 @@ class TestErrors(InstallCase):
     def test_failed_download_leaves_no_files(self):
         r = self.run_sh("all", CURL_FAIL="1")
         self.assertNotEqual(r.returncode, 0)
-        self.assertIn("archive/refs/tags/", self.log.read_text())
+        self.assertIn("/archive/", self.log.read_text())
         self.assertNotIn("not found", r.stderr)
         self.assertEqual(list(self.home.iterdir()), [])
 
     def test_failed_download_project_leaves_no_files(self):
         r = self.run_sh("opencode", "--project", CURL_FAIL="1")
         self.assertNotEqual(r.returncode, 0)
-        self.assertIn("archive/refs/tags/", self.log.read_text())
+        self.assertIn("/archive/", self.log.read_text())
         self.assertEqual(list(self.proj.iterdir()), [])
 
     def test_usage_errors_exit_2(self):
@@ -349,12 +349,12 @@ class TestVersion(InstallCase):
     def test_default_fetches_tag_of_version(self):
         want = json.loads((ROOT / "plugin/.claude-plugin/plugin.json").read_text())["version"]
         self.run_sh("opencode")
-        self.assertIn("https://github.com/yushman/slimspec/archive/refs/tags/v%s.tar.gz" % want,
+        self.assertIn("https://github.com/yushman/slimspec/archive/v%s.tar.gz" % want,
                       self.log.read_text())
 
     def test_version_flag_overrides_tag(self):
         self.run_sh("opencode", "--version", "v9.9.9")
-        self.assertIn("/archive/refs/tags/v9.9.9.tar.gz", self.log.read_text())
+        self.assertIn("/archive/v9.9.9.tar.gz", self.log.read_text())
 
 
 class TestUninstall(InstallCase):

@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh | 
 - To read the script first: `curl -fsSL https://raw.githubusercontent.com/yushman/slimspec/main/install.sh -o install.sh`, look at it, then `sh install.sh codex`.
 - `--project` installs into the current project (`.opencode/agents/`, `.codex/agents/`, `.qwen/agents/`, `.agents/agents/`, `.agents/skills/`, data in `.slimspec/install/`). It is per machine (absolute paths): every written path is added to `.gitignore`, and each teammate runs the installer. ZCode is global only: `zcode --project` fails, `all --project` skips ZCode.
 - Global paths: Qwen Code `~/.qwen/agents/` (skill stub shared in `~/.agents/skills/`); Antigravity `~/.gemini/config/agents/` with its own stub in `~/.gemini/config/skills/`.
-- `--version <tag>` installs that tag instead of the version of the script.
+- `--version <ref>` installs that tag or branch instead of the version of the script.
 - Update = rerun the installer. Remove = rerun it with `--uninstall`; only the files it wrote are deleted.
 - Usage: `$slimspec <phase|mode> <idea>`, e.g. `$slimspec fast add a --verbose flag`, or the host's own way to invoke a skill named `slimspec`. Specs are written as `AGENTS.md` by default (`spec.format: agents-md`). The migrate skills are Claude Code only.
 - OpenCode also reads `~/.claude/skills`: if you also keep a user-level copy in `~/.claude/skills/slimspec`, `slimspec` may show up twice.

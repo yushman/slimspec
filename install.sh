@@ -3,7 +3,7 @@
 set -eu
 
 version=0.1.8
-usage='usage: install.sh [claude|opencode|codex|zcode|antigravity|qwen|all] [--project] [--version <tag>] [--uninstall]'
+usage='usage: install.sh [claude|opencode|codex|zcode|antigravity|qwen|all] [--project] [--version <ref>] [--uninstall]'
 roles='scanner debugger planner implementer reviewer grounder'
 
 die() { echo "$usage" >&2; exit 2; }
@@ -139,7 +139,7 @@ fi
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-curl -fsSL "https://github.com/yushman/slimspec/archive/refs/tags/$tag.tar.gz" -o "$TMP/src.tgz"
+curl -fsSL "https://github.com/yushman/slimspec/archive/$tag.tar.gz" -o "$TMP/src.tgz"
 mkdir "$TMP/src"
 tar -xzf "$TMP/src.tgz" -C "$TMP/src" --strip-components=1
 for p in plugin/skills plugin/agents hosts/skill/SKILL.md; do
