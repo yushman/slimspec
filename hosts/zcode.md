@@ -21,6 +21,8 @@ An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means la
 
 Ignore model aliases such as `sonnet` and `opus`. Pass `models.<role>` from the config at spawn time only where this host supports a per-spawn model; otherwise the subagent inherits the session's model.
 
+`init` model questions: do not invent model ids. ZCode asks in plain text with no built-in Other, so always list explicit numbered options, recommended first: the existing `models.<role>` if set | the session model (writes no override for the role) | type a model id. When `models` is empty or the config is missing, offer to run `init` via `AskUserQuestion` before the first agent launch; if declined, run on the session model.
+
 ## Spec format
 
 With no `spec.format` in `.slimspec/config.yaml`, the default is `agents-md` (specs live in `<unit>/AGENTS.md` and a root `AGENTS.md`), not `claude-md`. When `init` asks for the spec format, it lists `agents-md` first as recommended: options `agents-md` (recommended) | `claude-md` | `readme` | `central`, and the question text names `native` and `none`, which are reachable through a free answer.

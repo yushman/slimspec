@@ -18,7 +18,9 @@ An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means sp
 
 ## Models
 
-Ignore model aliases such as `sonnet` and `opus`. Pass `models.<role>` from the config at spawn time only where this host supports a per-spawn model; otherwise the subagent inherits the session's model.
+Ignore model aliases such as `sonnet` and `opus`. The `task` tool has no per-spawn model: a subagent's model comes only from `model: <provider/model>` in the frontmatter of its agent file, so `models.<role>` in the config is not used on this host.
+
+`init` model questions: list the models with `opencode models` (via bash); never invent ids. Per role, up to 4 options: the `model:` already in the installed `slimspec-<role>.md` if set, else for debugger, planner, reviewer and grounder the strongest listed model, for scanner and implementer a fast one, recommended first; then the session model and other listed models. The rest are reachable via Other. Write each answer as a `model: <provider/model>` line in the frontmatter of the installed pointer agent `slimspec-<role>.md`, in `.opencode/agents/` of the project if the files are there, else in `~/.config/opencode/agents/`. At step 7, list each target agent file path and its `model:` line under the YAML, and write them only when the user answers write. The session model removes the `model:` line. Do not write `models` to the config; end the final line by saying models were written to the agent files. Reinstalling overwrites these lines; rerun `init` to restore them. Uninstall still removes the files by name. When the pointer agents carry no `model:` line, offer to run `init` via `AskUserQuestion` before the first agent launch; if declined, run on the session model.
 
 ## Spec format
 

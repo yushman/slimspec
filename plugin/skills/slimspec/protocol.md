@@ -45,7 +45,7 @@ Next phase, from files only:
 
 You are the only decision-maker; agents only execute and report. The change files are the persisted snapshot of your context (for resume and gates) and the handoff medium to agents. Write anything decided in conversation that an agent needs to the files first, then launch. Prompts carry paths and ids — change folder, mode, resolved test command, the phase's inputs — never inlined artifact content; they add only what is not yet in files (e.g. the finding behind a `fix:`).
 
-Launch `slimspec:scanner | debugger | planner | implementer | reviewer | grounder` with the Agent tool (`subagent_type`; `model` from `models.<role>` when set). Each returns only a YAML report (`status: DONE | BLOCKED | FAILED`, `task`, `files`, `decisions`, `deviations`, `tdd`, `questions`, role fields) defined in its agent file. It stays in the session; the user never sees agent YAML, logs or diffs.
+Launch `slimspec:scanner | debugger | planner | implementer | reviewer | grounder` with the Agent tool (`subagent_type`; `model` from `models.<role>` when set; on a non-Claude host with `models` empty or no config, the host mapping's Models section says to offer `init` first). Each returns only a YAML report (`status: DONE | BLOCKED | FAILED`, `task`, `files`, `decisions`, `deviations`, `tdd`, `questions`, role fields) defined in its agent file. It stays in the session; the user never sees agent YAML, logs or diffs.
 
 - **DONE** — keep the report (compact); continue.
 - **BLOCKED** — ask its `questions`; relaunch the same agent with the original prompt plus the answers.

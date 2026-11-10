@@ -20,6 +20,8 @@ The config is optional: every key has a default. Ask with `AskUserQuestion`; eac
 5. One call:
    - `changes.closed` (closed change folders): delete | archive (moved to `.slimspec/archive/<date>-<slug>/`).
    - `changes.gitignore`: yes (add change folders to `.gitignore`) | no (tracked; change files go into lane or wave commits).
-6. Do not ask about models: keep `models` from the existing config, else `models: {}`.
+6. Models, two calls: scanner, debugger, planner, then implementer, reviewer, grounder. Recommended (first) option per role: its existing `models.<role>`, else its D16 tier (heavy: debugger, planner, reviewer, grounder; light: scanner, implementer).
+   - Claude Code: opus | sonnet | haiku; the default tier is the role's agent frontmatter model. Write only roles whose answer differs from it.
+   - Other hosts: the options and how to list them come from the host mapping's Models section. Write every answer to `models`, except the session model, which writes no key, unless the mapping says otherwise.
 7. Show the resulting YAML in the exact layout of the config block in [protocol.md](../slimspec/protocol.md) (same keys, aligned `#` comments; quote `spec.unit` and `test` unless `auto`), then ask: write | change. On change, re-ask only the keys the user names.
-8. On write, create `.slimspec/` and write `.slimspec/config.yaml`. Never touch `.gitignore`. Reply with one line: the written path; per-role model overrides are edited in the file.
+8. On write, create `.slimspec/` and write `.slimspec/config.yaml`. Never touch `.gitignore`. Reply with one line: the written path; models can be edited in the file.

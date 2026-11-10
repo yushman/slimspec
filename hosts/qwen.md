@@ -19,7 +19,9 @@ An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means ca
 
 ## Models
 
-Ignore model aliases such as `sonnet` and `opus`. Pass `models.<role>` from the config at spawn time only where this host supports a per-spawn model; otherwise the subagent inherits the session's model.
+Ignore model aliases such as `sonnet` and `opus`. Pass `models.<role>` from the config as the `model` parameter of the `agent` tool.
+
+`init` model questions: the models are the `id` fields of the `models` array in `~/.qwen/model-registry.json` (also shown by `/model`); only models of the active provider work, so offer only those; never invent ids. Per role, up to 4 options: the existing `models.<role>` if set, else for debugger, planner, reviewer and grounder the strongest listed model, for scanner and implementer a fast one, recommended first; then the session model (writes no key for the role) and other listed models. The rest are reachable via Other. When `models` is empty or the config is missing, offer to run `init` via `AskUserQuestion` before the first agent launch; if declined, run on the session model.
 
 ## Spec format
 

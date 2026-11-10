@@ -4,9 +4,9 @@ Mapping of the Claude Code terms used in slimspec files. `<root>` is the slimspe
 
 ## Questions
 
-- `AskUserQuestion` has no tool on this host. Ask a text question instead: one decision, 2-4 numbered options, the recommended option first and marked as recommended. Then end your turn and wait for the answer. Never pick a default and continue.
+- `AskUserQuestion` maps to the `ask_question` tool. If it is missing or errors, ask a text question instead: one decision, 2-4 numbered options, the recommended option first and marked as recommended. Then end your turn and wait for the answer. Never pick a default and continue.
 - Independent questions may be batched: up to 4 independent questions in one turn, each numbered with its own 2-4 options and recommendation, then end the turn.
-- The same rule applies if any question tool errors: ask in text, end the turn, never pick a default and continue.
+- If `ask_question` errors or rejects the options, ask in text, end the turn, never pick a default and continue.
 
 ## Subagents
 
@@ -19,7 +19,9 @@ An Agent launch of `slimspec:<role>` (`subagent_type: slimspec:<role>`) means ca
 
 ## Models
 
-Ignore model aliases such as `sonnet` and `opus`. Pass `models.<role>` from the config at spawn time only where this host supports a per-spawn model; otherwise the subagent inherits the session's model.
+Ignore model aliases such as `sonnet` and `opus`. `invoke_subagent` accepts a per-spawn model: pass `models.<role>` from the config there. Only agy model ids work (list them with `agy models` via `run_command`).
+
+`init` model questions the models are those listed by `agy models`; never invent ids. Per role, up to 4 options: the existing `models.<role>` if set, else for debugger, planner, reviewer and grounder the strongest listed model, for scanner and implementer a fast one, recommended first; then the session model (writes no key for the role) and other listed models. The rest are reachable via Other. When `models` is empty or the config is missing, offer to run `init` via `AskUserQuestion` before the first agent launch; if declined, run on the session model.
 
 ## Spec format
 

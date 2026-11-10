@@ -386,6 +386,36 @@ class MappingFilesTest(unittest.TestCase):
     def test_opencode_batches_in_one_question_call(self):
         self.assertIn("one `question` call", plugin.read("hosts", "opencode.md"))
 
+    def test_antigravity_maps_question_tool_and_spawn_model(self):
+        text = plugin.read("hosts", "antigravity.md")
+        self.assertIn("`ask_question`", text)
+        self.assertNotIn("has no tool", text)
+        self.assertIn("`invoke_subagent` accepts a per-spawn model", text)
+        self.assertIn("agy models", text)
+
+    def test_mappings_offer_init_for_empty_models(self):
+        for host in ("codex", "zcode", "qwen", "antigravity"):
+            text = plugin.read("hosts", f"{host}.md")
+            self.assertRegex(text, r"`models` is empty[^\n]*offer to run `init`", host)
+        self.assertRegex(plugin.read("hosts", "opencode.md"), r"no `model:` line[^\n]*offer to run `init`")
+
+    def test_codex_and_qwen_pass_model_and_list_real_models(self):
+        codex = plugin.read("hosts", "codex.md")
+        self.assertIn("`model` of `spawn_agent`", codex)
+        self.assertIn("Available models", codex)
+        qwen = plugin.read("hosts", "qwen.md")
+        self.assertIn("`model` parameter of the `agent` tool", qwen)
+        self.assertIn("~/.qwen/model-registry.json", qwen)
+
+    def test_opencode_writes_model_into_agent_frontmatter(self):
+        text = plugin.read("hosts", "opencode.md")
+        self.assertIn("`opencode models`", text)
+        self.assertIn("`model: <provider/model>`", text)
+        self.assertIn(".opencode/agents/", text)
+        self.assertIn("~/.config/opencode/agents/", text)
+        self.assertIn("Do not write `models` to the config", text)
+        self.assertIn("overwrites these lines", text)
+
 
 if __name__ == "__main__":
     unittest.main()
